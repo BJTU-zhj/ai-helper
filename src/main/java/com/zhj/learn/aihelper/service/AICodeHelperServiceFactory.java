@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 public class AICodeHelperServiceFactory {
 
     @Resource
-    private ChatModel qwenChatModel;
+    private ChatModel myQwenChatModel;
 
     @Resource
     private ContentRetriever contentRetriever;
@@ -36,7 +36,7 @@ public class AICodeHelperServiceFactory {
         ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
 
         AICodeHelperService aiCodeHelperService= AiServices.builder(AICodeHelperService.class)
-                .chatModel(qwenChatModel)
+                .chatModel(myQwenChatModel)
                 .chatMemory(chatMemory)
                 .build();
         return aiCodeHelperService;
@@ -48,7 +48,7 @@ public class AICodeHelperServiceFactory {
         ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
 
         return AiServices.builder(AICodeHelperService.class)
-                .chatModel(qwenChatModel)
+                .chatModel(myQwenChatModel)
                 .chatMemory(chatMemory)
                 .contentRetriever(contentRetriever)
                 .build();
@@ -60,7 +60,7 @@ public class AICodeHelperServiceFactory {
         ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
 
         return AiServices.builder(AICodeHelperService.class)
-                .chatModel(qwenChatModel)
+                .chatModel(myQwenChatModel)
                 .chatMemory(chatMemory)
                 .tools(toolsExample)
                 .build();
@@ -71,7 +71,7 @@ public class AICodeHelperServiceFactory {
         ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
         return AiServices.builder(AICodeHelperService.class)
                 .chatMemory(chatMemory)
-                .chatModel(qwenChatModel)
+                .chatModel(myQwenChatModel)
                 .toolProviders(mcpToolProvider)
                 .build();
     }
@@ -81,7 +81,7 @@ public class AICodeHelperServiceFactory {
         ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
         return AiServices.builder(AICodeHelperService.class)
                 .chatMemory(chatMemory)
-                .chatModel(qwenChatModel)
+                .chatModel(myQwenChatModel)
                 .toolProviders(mcpToolProviderLocal)
                 .build();
     }
