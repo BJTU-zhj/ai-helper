@@ -2,7 +2,6 @@ package com.zhj.learn.aihelper.service;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,4 +60,13 @@ class AICodeHelperTest {
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
     }
+
+    @Test
+    void chatWithMcp() {
+        String userInput = "天津明天的天气怎么样";
+        String result = aiCodeHelper.chatWithMcp(userInput);
+        System.out.println("请求信息: " + userInput);
+        System.out.println("模型返回: " + result);
+    }
 }
+
