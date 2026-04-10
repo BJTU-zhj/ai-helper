@@ -8,6 +8,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -32,6 +33,9 @@ public class AICodeHelper {
 
     @Resource
     private AICodeHelperService aiCodeHelperServiceWithMcpLocal;
+
+    @Resource
+    private AICodeHelperService aiCodeHelperServiceStream;
 
     //简单对话
     public String chat(String message) {
@@ -72,5 +76,12 @@ public class AICodeHelper {
     //使用高德mcp获取真实天气-本地server
     public  String chatWithMcpLocal(String message){
         return aiCodeHelperServiceWithMcpLocal.chat(message);
+    }
+
+    //体验响应式，流式+会话记忆分割
+    public Flux<String> chatWithStream(String memoryId, String message){
+        return aiCodeHelperServiceStream.chatStream(memoryId,message)
+                .doOnError(e -> log.error("流式响应失败, message={}", message, e))
+                .onErrorResume(e -> Flux.just("流式调用失败: " + e.getMessage()));
     }
 }

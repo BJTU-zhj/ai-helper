@@ -2,7 +2,9 @@ package com.zhj.learn.aihelper.service.model;
 
 import com.zhj.learn.aihelper.service.lisenter.ModelLisenter;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
+import dev.langchain4j.community.model.dashscope.QwenStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -29,6 +31,12 @@ public class ChatModelConfig {
     @Bean
     public ChatModel myQwenChatModel() {
         return QwenChatModel.builder().apiKey(apiKey).modelName(modelName).listeners(List.of(chatModelListener)).build();
+     }
+
+     //返回流式模型
+     @Bean
+    public StreamingChatModel myStreamingQwenChatModel() {
+        return QwenStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).listeners(List.of(chatModelListener)).build();
      }
 
 }
