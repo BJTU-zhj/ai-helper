@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-//@Configuration
+@Configuration
 public class AagConfig {
 
     @Value("${app.rag.docs-path:src/main/resources/docs}")
