@@ -68,5 +68,13 @@ class AICodeHelperTest {
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
     }
+
+    @Test
+    void chatWithMcpLocal() {
+        String userInput = "云南明天的天气怎么样";
+        String result = aiCodeHelper.chatWithMcpLocal(userInput);
+        System.out.println("请求信息: " + userInput);
+        System.out.println("模型返回: " + result);
+    }
 }
 

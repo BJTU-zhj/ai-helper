@@ -30,6 +30,9 @@ public class AICodeHelper {
     @Resource
     private AICodeHelperService aiCodeHelperServiceWithMcp;
 
+    @Resource
+    private AICodeHelperService aiCodeHelperServiceWithMcpLocal;
+
     //简单对话
     public String chat(String message) {
         UserMessage userMessage = UserMessage.from(message);
@@ -64,5 +67,10 @@ public class AICodeHelper {
     //使用高德mcp获取真实天气
     public  String chatWithMcp(String message){
         return aiCodeHelperServiceWithMcp.chat(message);
+    }
+
+    //使用高德mcp获取真实天气-本地server
+    public  String chatWithMcpLocal(String message){
+        return aiCodeHelperServiceWithMcpLocal.chat(message);
     }
 }

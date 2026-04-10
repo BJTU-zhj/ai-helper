@@ -6,11 +6,15 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
+import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
  * 高德地图配置
@@ -43,6 +47,24 @@ public class GaoDeMcpConfig {
 
         //获取工具
         return McpToolProvider.builder().mcpClients(client).build();
+    }
+
+    @Bean
+    public McpToolProvider mcpToolProviderLocal(){
+        //映射json中的配置
+        Map<String,String> env=new HashMap<>();
+        env.put("AMAP_MAPS_API_KEY", apiKey);
+        //配置传输层
+        McpTransport transport= StdioMcpTransport.builder()
+                .command(List.of("cmd", "/c", "npx", "-y", "@amap/amap-maps-mcp-server"))
+                .environment(env)
+                .build();
+        //配置客户端
+        McpClient client= DefaultMcpClient.builder().transport(transport).build();
+        //配置工具
+        return McpToolProvider.builder().mcpClients(client)
+                .failIfOneServerFails(true)
+                .build();
     }
 
 }

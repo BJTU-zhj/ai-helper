@@ -27,6 +27,9 @@ public class AICodeHelperServiceFactory {
     @Resource
     private McpToolProvider mcpToolProvider;
 
+    @Resource
+    private McpToolProvider mcpToolProviderLocal;
+
     @Bean
     public AICodeHelperService aiCodeHelperService() {
 
@@ -70,6 +73,16 @@ public class AICodeHelperServiceFactory {
                 .chatMemory(chatMemory)
                 .chatModel(qwenChatModel)
                 .toolProviders(mcpToolProvider)
+                .build();
+    }
+
+    @Bean
+    public AICodeHelperService aiCodeHelperServiceWithMcpLocal(){
+        ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
+        return AiServices.builder(AICodeHelperService.class)
+                .chatMemory(chatMemory)
+                .chatModel(qwenChatModel)
+                .toolProviders(mcpToolProviderLocal)
                 .build();
     }
 
