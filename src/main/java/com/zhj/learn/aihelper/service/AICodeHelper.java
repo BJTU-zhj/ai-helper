@@ -24,6 +24,9 @@ public class AICodeHelper {
     @Resource
     private AICodeHelperService aiCodeHelperServiceWithRag;
 
+    @Resource
+    private AICodeHelperService aiCodeHelperServiceWithTools;
+
     //简单对话
     public String chat(String message) {
         UserMessage userMessage = UserMessage.from(message);
@@ -48,5 +51,10 @@ public class AICodeHelper {
     //使用 rag来增强会话质量,使用ai service
     public String chatWithRag(String message){
         return aiCodeHelperServiceWithRag.chat(message);
+    }
+
+    //使用 ai service+tools
+    public String chatWithTools(String message){
+        return aiCodeHelperServiceWithTools.chat(message);
     }
 }

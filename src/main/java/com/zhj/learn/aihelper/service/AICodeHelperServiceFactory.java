@@ -1,5 +1,6 @@
 package com.zhj.learn.aihelper.service;
 
+import com.zhj.learn.aihelper.service.tools.ToolsExample;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -18,6 +19,9 @@ public class AICodeHelperServiceFactory {
 
     @Resource
     private ContentRetriever contentRetriever;
+
+    @Resource
+    private ToolsExample toolsExample;
 
     @Bean
     public AICodeHelperService aiCodeHelperService() {
@@ -40,6 +44,18 @@ public class AICodeHelperServiceFactory {
                 .chatLanguageModel(qwenChatModel)
                 .chatMemory(chatMemory)
                 .contentRetriever(contentRetriever)
+                .build();
+    }
+
+    @Bean
+    public AICodeHelperService aiCodeHelperServiceWithTools(){
+
+        ChatMemory chatMemory= MessageWindowChatMemory.withMaxMessages(10);
+
+        return AiServices.builder(AICodeHelperService.class)
+                .chatLanguageModel(qwenChatModel)
+                .chatMemory(chatMemory)
+                .tools(toolsExample)
                 .build();
     }
 

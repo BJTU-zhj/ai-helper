@@ -11,17 +11,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 class AICodeHelperTest {
 
     @Resource
-    private ChatLanguageModel qwenChatModel;
-
-    @Resource
-    private AICodeHelperService aiCodeHelperService;
-
-    @Resource
     private AICodeHelper aiCodeHelper;
 
     @Test
     void testChat() {
-        String userInput = "你好，鱼皮是什么";
+        String userInput = "你好，上海是什么天气";
         String result = aiCodeHelper.chat(userInput);
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
@@ -56,6 +50,14 @@ class AICodeHelperTest {
     void chatWithRag() {
         String userInput = "你好，鱼皮是什么";
         String result = aiCodeHelper.chatWithRag(userInput);
+        System.out.println("请求信息: " + userInput);
+        System.out.println("模型返回: " + result);
+    }
+
+    @Test
+    void chatWithTools() {
+        String userInput = "上海什么天气";
+        String result = aiCodeHelper.chatWithTools(userInput);
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
     }
