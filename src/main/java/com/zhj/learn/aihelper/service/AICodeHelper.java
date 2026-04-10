@@ -19,7 +19,10 @@ public class AICodeHelper {
     private ChatLanguageModel qwenChatModel;
 
     @Resource
-    private AICodeHelperService AICodeHelperService;
+    private AICodeHelperService aiCodeHelperService;
+
+    @Resource
+    private AICodeHelperService aiCodeHelperServiceWithRag;
 
     //简单对话
     public String chat(String message) {
@@ -39,6 +42,11 @@ public class AICodeHelper {
 
     //用ai servic来抽象chat过程
     public String chatWithService(String message) {
-        return AICodeHelperService.chat(message);
+        return aiCodeHelperService.chat(message);
+    }
+
+    //使用 rag来增强会话质量,使用ai service
+    public String chatWithRag(String message){
+        return aiCodeHelperServiceWithRag.chat(message);
     }
 }

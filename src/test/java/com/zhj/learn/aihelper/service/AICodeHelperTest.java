@@ -21,7 +21,7 @@ class AICodeHelperTest {
 
     @Test
     void testChat() {
-        String userInput = "你好";
+        String userInput = "你好，鱼皮是什么";
         String result = aiCodeHelper.chat(userInput);
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
@@ -50,5 +50,13 @@ class AICodeHelperTest {
         String result2 = aiCodeHelper.chatWithService(userInput);
         System.out.println("请求信息: " + userInput2);
         System.out.println("模型返回: " + result2);
+    }
+
+    @Test
+    void chatWithRag() {
+        String userInput = "你好，鱼皮是什么";
+        String result = aiCodeHelper.chatWithRag(userInput);
+        System.out.println("请求信息: " + userInput);
+        System.out.println("模型返回: " + result);
     }
 }
