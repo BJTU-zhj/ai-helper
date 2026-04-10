@@ -42,9 +42,13 @@ class AICodeHelperTest {
     //带会话记忆的聊天
     @Test
     void testChatWithService() {
-        String userInput = "你好，明天天津天气怎么样？";
+        String userInput = "你好，我是小张？";
         String result = aiCodeHelper.chatWithService(userInput);
         System.out.println("请求信息: " + userInput);
         System.out.println("模型返回: " + result);
+        String userInput2 = "你好，我是谁？";
+        String result2 = aiCodeHelper.chatWithService(userInput);
+        System.out.println("请求信息: " + userInput2);
+        System.out.println("模型返回: " + result2);
     }
 }
