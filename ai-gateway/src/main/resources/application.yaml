@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: ai-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: code-assistant-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/code-assistant/**
+              filters:
+                - StripPrefix=1
+            - id: super-host-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/super-host/**
+              filters:
+                - StripPrefix=1
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.zhj.learn</groupId>
+        <artifactId>ai-helper</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ai-code-assistant-service</artifactId>
+    <name>ai-code-assistant-service</name>
+    <description>LangChain4j based code assistant service</description>
+
+    <dependencies>
+        <!--
+          提供传统 Spring MVC 能力（DispatcherServlet、RestController、JSON 序列化等），
+          支撑当前同步 HTTP 接口，例如普通 chat 请求返回 String。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+          提供响应式编程栈（Reactor + WebFlux），
+          当前用于流式输出场景（Flux<String>），支持 SSE/分块返回等流式响应能力。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!--
+          简化 Java 样板代码（如 @Slf4j、getter/setter、构造器等），
+          optional=true 表示不会作为传递依赖暴露给下游模块。
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--
+          LangChain4j 的 DashScope 社区 Starter，负责自动装配 DashScope 对接能力，
+          包含 ChatModel / EmbeddingModel 等 Bean 的配置入口，减少手动创建模型客户端代码。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-community-dashscope-spring-boot-starter</artifactId>
+            <version>${langchain4j.beta.version}</version>
+            <exclusions>
+                <!--
+                  排除 slf4j-simple，避免与 Spring Boot 默认日志体系（Logback）冲突，
+                  防止出现多日志绑定警告或日志行为不一致。
+                -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--
+          LangChain4j 核心库，提供基础抽象与能力：
+          Message/Model/Memory/Tool/RAG 等核心 API 都来自该依赖。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
+        <!--
+          LangChain4j 的 Spring Boot Starter，负责 AiService 等组件的自动配置，
+          让接口式 AI Service（如 AICodeHelperService）可被 Spring 容器统一管理。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!--
+          MCP（Model Context Protocol）支持库，
+          用于把外部 MCP Server 的工具能力挂载到模型调用链中（如天气、地图等实时工具）。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-mcp</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!--
+          提供 LangChain4j 与 Reactor 的桥接能力，
+          主要服务于流式 token 推送、响应式处理链与 backpressure 处理。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-reactor</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!--
+          测试依赖集合（JUnit 5、Spring Test、Mock 框架等），
+          仅在 test 阶段生效，不进入生产包体。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

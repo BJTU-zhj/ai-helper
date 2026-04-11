@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: ai-code-assistant-service
+  profiles:
+    active: local
+server:
+  port: 8081

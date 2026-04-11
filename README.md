@@ -1,7 +1,21 @@
-体会model对象在同模型不同响应，同平台不同模型，不同平台模型的自定义场景；
+# ai-helper
 
-体会mcp、rag、lisenter、tools的“挂载性”
+Microservices structure:
 
-体会 ai service的思想，接口定义动作和成分，factory负责具体实现
+- `ai-code-assistant-service`: existing LangChain4j code assistant service, default port `8081`
+- `ai-super-host`: Spring AI based general agent host service skeleton, default port `8082`
+- `ai-gateway`: gateway service skeleton for forwarding traffic to internal AI services, default port `8080`
 
-codex生成前端，改bug
+## Build all modules
+
+```bash
+./mvnw clean package
+```
+
+## Run services
+
+```bash
+./mvnw -pl ai-code-assistant-service spring-boot:run
+./mvnw -pl ai-super-host spring-boot:run
+./mvnw -pl ai-gateway spring-boot:run
+```

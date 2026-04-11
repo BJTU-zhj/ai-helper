@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.zhj.learn</groupId>
+        <artifactId>ai-helper</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ai-gateway</artifactId>
+    <name>ai-gateway</name>
+    <description>Gateway service for AI microservices routing</description>
+
+    <dependencies>
+        <!--
+          Spring Cloud Gateway（WebFlux 服务端）核心依赖。
+          相比旧的 spring-cloud-starter-gateway，这是新命名依赖，
+          可避免启动时的 deprecated 警告，并继续提供路由转发、
+          断言匹配（Path/Method/Header）和过滤器链能力。
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+        </dependency>
+
+        <!--
+          提供网关服务的运维与健康检查端点，
+          方便你后续做网关可用性监控、告警和部署探针。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+          网关模块测试依赖，支持路由规则测试、上下文加载测试等。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

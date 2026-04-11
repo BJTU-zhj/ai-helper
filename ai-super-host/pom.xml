@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.zhj.learn</groupId>
+        <artifactId>ai-helper</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ai-super-host</artifactId>
+    <name>ai-super-host</name>
+    <description>General purpose agent host service based on Spring AI</description>
+
+    <dependencies>
+        <!--
+          提供基础 Web 接口能力（REST API、参数绑定、JSON 编解码），
+          作为 ai-super-host 暴露通用 Agent 能力的 HTTP 入口。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+          提供生产可观测与运维端点（/actuator/health、/actuator/info 等），
+          便于后续接入网关健康检查、容器探针和监控系统。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+          Spring AI 的 OpenAI 模型 Starter，
+          负责自动装配 ChatClient / 模型调用相关 Bean，作为该服务实现通用 Agent 的基础框架依赖。
+          说明：即使后续切换模型供应商，也建议保留 Spring AI 编程模型不变，仅替换对应 starter。
+        -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+
+        <!--
+          测试依赖集合，支持 Spring Boot 上下文加载测试与接口测试，
+          scope=test 确保不会打入运行时产物。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
