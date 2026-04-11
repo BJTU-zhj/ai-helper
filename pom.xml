@@ -79,6 +79,28 @@
                 <version>4.4.0</version>
             </dependency>
 
+            <!--
+              统一管理 Spring Boot 依赖版本，子模块只声明 spring-boot-* 依赖即可，
+              避免在每个服务里手动写版本号并减少版本冲突风险。
+            -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <version>3.2.5</version>
+            </dependency>
+
+            <!--
+              统一管理 FastJSON 依赖版本，子模块只声明 fastjson 依赖即可，
+              避免在每个服务里手动写版本号并减少版本冲突风险。
+            -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.83</version>
+            </dependency>
+
+
+
         </dependencies>
     </dependencyManagement>
 </project>

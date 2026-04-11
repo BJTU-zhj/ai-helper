@@ -29,10 +29,47 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- 如果公共模块里包含可复用的 Spring 组件（如统一异常模型、校验注解），保留基础上下文能力 -->
+        <!-- 公共模块基础 Spring 能力（Bean 生命周期、注解扫描、环境配置等） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <!-- AOP 基础能力（@Aspect、代理织入） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+        </dependency>
+
+        <!-- AspectJ 织入器，支撑 Spring AOP 对切点表达式的解析与运行 -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+        </dependency>
+
+        <!-- Web 抽象（RequestContextHolder、MultipartFile 等），不引入 Web 容器 starter -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+
+        <!-- JSON 序列化（用于日志安全输出参数/结果） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- 日志门面接口，供公共模块输出日志 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Servlet API 仅用于编译期类型引用，运行时由具体 Web 服务提供 -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 测试支持 -->
@@ -41,6 +78,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
