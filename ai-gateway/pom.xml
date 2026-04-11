@@ -37,6 +37,15 @@
         </dependency>
 
         <!--
+          引入公共模块，供网关复用统一返回模型、鉴权上下文对象等共享定义。
+        -->
+        <dependency>
+            <groupId>com.zhj.learn</groupId>
+            <artifactId>ai-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--
           网关模块测试依赖，支持路由规则测试、上下文加载测试等。
         -->
         <dependency>

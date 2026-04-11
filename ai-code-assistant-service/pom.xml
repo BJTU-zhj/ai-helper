@@ -45,6 +45,15 @@
         </dependency>
 
         <!--
+          引入公共模块，复用跨服务通用对象与工具能力（如统一响应、异常码、公共工具类）。
+        -->
+        <dependency>
+            <groupId>com.zhj.learn</groupId>
+            <artifactId>ai-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--
           LangChain4j 的 DashScope 社区 Starter，负责自动装配 DashScope 对接能力，
           包含 ChatModel / EmbeddingModel 等 Bean 的配置入口，减少手动创建模型客户端代码。
         -->
@@ -112,6 +121,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!--
+          Knife4j 集成，提供接口文档能力，
+          基于 Spring Boot 3.x 集成，支持 Jakarta EE 9.x。
+        -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
     </dependencies>
 

@@ -23,6 +23,7 @@
         <module>ai-code-assistant-service</module>
         <module>ai-super-host</module>
         <module>ai-gateway</module>
+        <module>ai-common</module>
     </modules>
 
     <properties>
@@ -57,6 +58,27 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!--
+              统一管理 Hutool 依赖版本，子模块只声明 hutool-* 依赖即可，
+              避免在每个服务里手动写版本号并减少版本冲突风险。
+            -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.8.38</version>
+            </dependency>
+
+            <!--
+              统一管理 Knife4j 依赖版本，子模块只声明 knife4j-* 依赖即可，
+              避免在每个服务里手动写版本号并减少版本冲突风险。
+            -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                <version>4.4.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
