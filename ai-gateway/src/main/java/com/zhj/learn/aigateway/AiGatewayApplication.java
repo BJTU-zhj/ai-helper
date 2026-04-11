@@ -15,6 +15,6 @@ public class AiGatewayApplication {
         SpringApplication app = new SpringApplication(AiGatewayApplication.class);
         Environment env = app.run(args).getEnvironment();
         LOG.info("网关启动成功！！");
-        LOG.info("地址: \thttp://127.0.0.1:{}{}/hello", env.getProperty("server.port"),env.getProperty("server.servlet.context-path"));
+        LOG.info("地址: \thttp://127.0.0.1:{}/{}", env.getProperty("server.port"),env.getProperty("server.servlet.context-path"));
     }
 }
