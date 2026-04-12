@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: ai-super-host
+  profiles:
+    active:  local
+
+server:
+  port: 8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+mybatis:
+  mapper-locations: classpath*:mapper/**/*.xml
+
+logging:
+  level:
+    com.zhj.learn.aisuperhost.mapper: debug
+
+
+# springdoc-openapi项目配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.zhj.learn.aisuperhost.controller
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhj.learn.aisuperhost.mapper.ChatSummaryMapper">
+  <resultMap id="BaseResultMap" type="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    <id column="session_id" jdbcType="VARCHAR" property="sessionId" />
+    <result column="last_turn_id" jdbcType="BIGINT" property="lastTurnId" />
+    <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    <result column="summary_content" jdbcType="LONGVARCHAR" property="summaryContent" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    session_id, last_turn_id, updated_at
+  </sql>
+  <sql id="Blob_Column_List">
+    summary_content
+  </sql>
+  <select id="selectByExampleWithBLOBs" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummaryExample" resultMap="ResultMapWithBLOBs">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from chat_summary
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByExample" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummaryExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from chat_summary
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from chat_summary
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from chat_summary
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummaryExample">
+    delete from chat_summary
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    insert into chat_summary (session_id, last_turn_id, updated_at, 
+      summary_content)
+    values (#{sessionId,jdbcType=VARCHAR}, #{lastTurnId,jdbcType=BIGINT}, #{updatedAt,jdbcType=TIMESTAMP}, 
+      #{summaryContent,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    insert into chat_summary
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sessionId != null">
+        session_id,
+      </if>
+      <if test="lastTurnId != null">
+        last_turn_id,
+      </if>
+      <if test="updatedAt != null">
+        updated_at,
+      </if>
+      <if test="summaryContent != null">
+        summary_content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sessionId != null">
+        #{sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="lastTurnId != null">
+        #{lastTurnId,jdbcType=BIGINT},
+      </if>
+      <if test="updatedAt != null">
+        #{updatedAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="summaryContent != null">
+        #{summaryContent,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummaryExample" resultType="java.lang.Long">
+    select count(*) from chat_summary
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update chat_summary
+    <set>
+      <if test="row.sessionId != null">
+        session_id = #{row.sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="row.lastTurnId != null">
+        last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      </if>
+      <if test="row.updatedAt != null">
+        updated_at = #{row.updatedAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="row.summaryContent != null">
+        summary_content = #{row.summaryContent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExampleWithBLOBs" parameterType="map">
+    update chat_summary
+    set session_id = #{row.sessionId,jdbcType=VARCHAR},
+      last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      updated_at = #{row.updatedAt,jdbcType=TIMESTAMP},
+      summary_content = #{row.summaryContent,jdbcType=LONGVARCHAR}
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update chat_summary
+    set session_id = #{row.sessionId,jdbcType=VARCHAR},
+      last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      updated_at = #{row.updatedAt,jdbcType=TIMESTAMP}
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    update chat_summary
+    <set>
+      <if test="lastTurnId != null">
+        last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+      </if>
+      <if test="updatedAt != null">
+        updated_at = #{updatedAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="summaryContent != null">
+        summary_content = #{summaryContent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    update chat_summary
+    set last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+      updated_at = #{updatedAt,jdbcType=TIMESTAMP},
+      summary_content = #{summaryContent,jdbcType=LONGVARCHAR}
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
+    update chat_summary
+    set last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+      updated_at = #{updatedAt,jdbcType=TIMESTAMP}
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+</mapper>
