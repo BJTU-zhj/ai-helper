@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>ai-utility-agent-service</artifactId>
-    <name>ai-code-assistant-service</name>
+    <name>ai-utility-agent-service</name>
     <description>LangChain4j based code assistant service</description>
 
     <dependencies>

@@ -18,8 +18,8 @@ This document is intended as a fast handoff context for another LLM.
 ```text
 ai-helper/                          (parent, packaging=pom)
   ai-common/                        (shared library)
-  ai-code-assistant-service/        (LangChain4j service)
-  ai-super-host/                    (Spring AI service)
+  ai-utility-agent-service/         (LangChain4j service)
+  ai-kitchen-brain-service/         (Spring AI service)
   ai-gateway/                       (Spring Cloud Gateway)
   front-show/                       (frontend-related folder, currently not in Maven reactor)
 ```
@@ -27,8 +27,8 @@ ai-helper/                          (parent, packaging=pom)
 Parent reactor order (current):
 1. `ai-helper`
 2. `ai-common`
-3. `ai-code-assistant-service`
-4. `ai-super-host`
+3. `ai-utility-agent-service`
+4. `ai-kitchen-brain-service`
 5. `ai-gateway`
 
 ## 3. Tech Stack and Version Choices
@@ -43,13 +43,13 @@ Parent reactor order (current):
 
 ### Module-level technologies
 
-#### `ai-code-assistant-service`
+#### `ai-utility-agent-service`
 - Spring MVC + WebFlux
 - LangChain4j (DashScope, MCP, reactive stream)
 - Knife4j (OpenAPI docs)
 - Depends on `ai-common`
 
-#### `ai-super-host`
+#### `ai-kitchen-brain-service`
 - Spring MVC + Actuator
 - Spring AI (`spring-ai-starter-model-openai`)
 - Depends on `ai-common`
@@ -75,10 +75,11 @@ Parent reactor order (current):
 ## 4. Runtime Ports and Service Names
 
 - `ai-gateway`: `8080`
-- `ai-code-assistant-service`: `8081`
-- `ai-super-host`: `8082`
+- `ai-utility-agent-service`: `8081`
+- `ai-kitchen-brain-service`: `8082`
 
 Spring application names:
+note: application name and module name are intentionally different.
 - `ai-gateway`
 - `ai-code-assistant-service`
 - `ai-super-host`
@@ -123,8 +124,8 @@ Gateway access examples:
 
 ### Run each service
 ```bash
-./mvnw -pl ai-code-assistant-service spring-boot:run
-./mvnw -pl ai-super-host spring-boot:run
+./mvnw -pl ai-utility-agent-service spring-boot:run
+./mvnw -pl ai-kitchen-brain-service spring-boot:run
 ./mvnw -pl ai-gateway spring-boot:run
 ```
 
@@ -137,7 +138,7 @@ Typical fix sequence:
 ```bash
 ./mvnw -N install -f pom.xml
 ./mvnw -pl ai-common -am install -f pom.xml
-./mvnw -pl ai-super-host -am compile -f pom.xml
+./mvnw -pl ai-kitchen-brain-service -am compile -f pom.xml
 ```
 
 Keep `settings.xml` and `maven.repo.local` consistent across commands/IDE.
@@ -147,14 +148,14 @@ Keep `settings.xml` and `maven.repo.local` consistent across commands/IDE.
 ### Done
 - Monolith split into Maven multi-module microservices
 - `ai-gateway` created and routing configured
-- `ai-super-host` scaffold created with Spring AI
+- `ai-kitchen-brain-service` scaffold created with Spring AI
 - `ai-common` introduced and integrated
 - Shared AOP + global exception handler added
 - Gateway forward logging feature implemented
 - Root compile currently passes
 
 ### In progress / not yet implemented
-- `ai-super-host` business logic (agent capabilities)
+- `ai-kitchen-brain-service` business logic (agent capabilities)
 - richer gateway capabilities (auth, rate-limit, etc.)
 - service discovery / config center / distributed governance (if needed)
 
@@ -178,7 +179,7 @@ Example:
 
 ```text
 Read PROJECT_CONTEXT_FOR_LLM.md first.
-Work only in ai-super-host.
+Work only in ai-kitchen-brain-service.
 Implement a minimal Spring AI chat endpoint with DTO + validation + unified CommonResp response.
 Do not change gateway routes.
 ```

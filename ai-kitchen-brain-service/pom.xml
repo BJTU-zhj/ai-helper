@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>ai-kitchen-brain-service</artifactId>
-    <name>ai-super-host</name>
+    <name>ai-kitchen-brain-service</name>
     <description>General purpose agent host service based on Spring AI</description>
 
     <dependencies>

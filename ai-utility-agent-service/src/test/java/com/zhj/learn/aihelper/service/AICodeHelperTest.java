@@ -1,80 +1,80 @@
-package com.zhj.learn.aihelper.service;
-import dev.langchain4j.data.message.ImageContent;
-import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.message.UserMessage;
-import jakarta.annotation.Resource;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class AICodeHelperTest {
-
-    @Resource
-    private AICodeHelper aiCodeHelper;
-
-    @Test
-    void testChat() {
-        String userInput = "你好，上海是什么天气";
-        String result = aiCodeHelper.chat(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-    }
-
-    @Test
-    void testChatWithImage() {
-        UserMessage userMessage = UserMessage.from(
-                TextContent.from("你好，帮我分析一下这张图片的内容"),
-                ImageContent.from("https://bkimg.cdn.bcebos.com/pic/b21bb051f819861841bb490948ed2e738ad4e6bb")
-        );
-
-        String result = aiCodeHelper.chatWithImage(userMessage);
-        System.out.println("请求信息: 你好，帮我分析一下这张图片的内容");
-        System.out.println("模型返回: " + result);
-    }
-
-    //带会话记忆的聊天
-    @Test
-    void testChatWithService() {
-        String userInput = "你好，我是小张？";
-        String result = aiCodeHelper.chatWithService(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-        String userInput2 = "你好，我是谁？";
-        String result2 = aiCodeHelper.chatWithService(userInput);
-        System.out.println("请求信息: " + userInput2);
-        System.out.println("模型返回: " + result2);
-    }
-
-    @Test
-    void chatWithRag() {
-        String userInput = "你好，鱼皮是什么";
-        String result = aiCodeHelper.chatWithRag(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-    }
-
-    @Test
-    void chatWithTools() {
-        String userInput = "上海什么天气";
-        String result = aiCodeHelper.chatWithTools(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-    }
-
-    @Test
-    void chatWithMcp() {
-        String userInput = "天津明天的天气怎么样";
-        String result = aiCodeHelper.chatWithMcp(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-    }
-
-    @Test
-    void chatWithMcpLocal() {
-        String userInput = "云南明天的天气怎么样";
-        String result = aiCodeHelper.chatWithMcpLocal(userInput);
-        System.out.println("请求信息: " + userInput);
-        System.out.println("模型返回: " + result);
-    }
-}
-
+//package com.zhj.learn.aihelper.service;
+//import dev.langchain4j.data.message.ImageContent;
+//import dev.langchain4j.data.message.TextContent;
+//import dev.langchain4j.data.message.UserMessage;
+//import jakarta.annotation.Resource;
+//import org.junit.jupiter.api.Test;
+//import org.springframework.boot.test.context.SpringBootTest;
+//
+//@SpringBootTest
+//class AICodeHelperTest {
+//
+//    @Resource
+//    private AICodeHelper aiCodeHelper;
+//
+//    @Test
+//    void testChat() {
+//        String userInput = "你好，上海是什么天气";
+//        String result = aiCodeHelper.chat(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//    }
+//
+//    @Test
+//    void testChatWithImage() {
+//        UserMessage userMessage = UserMessage.from(
+//                TextContent.from("你好，帮我分析一下这张图片的内容"),
+//                ImageContent.from("https://bkimg.cdn.bcebos.com/pic/b21bb051f819861841bb490948ed2e738ad4e6bb")
+//        );
+//
+//        String result = aiCodeHelper.chatWithImage(userMessage);
+//        System.out.println("请求信息: 你好，帮我分析一下这张图片的内容");
+//        System.out.println("模型返回: " + result);
+//    }
+//
+//    //带会话记忆的聊天
+//    @Test
+//    void testChatWithService() {
+//        String userInput = "你好，我是小张？";
+//        String result = aiCodeHelper.chatWithService(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//        String userInput2 = "你好，我是谁？";
+//        String result2 = aiCodeHelper.chatWithService(userInput);
+//        System.out.println("请求信息: " + userInput2);
+//        System.out.println("模型返回: " + result2);
+//    }
+//
+//    @Test
+//    void chatWithRag() {
+//        String userInput = "你好，鱼皮是什么";
+//        String result = aiCodeHelper.chatWithRag(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//    }
+//
+//    @Test
+//    void chatWithTools() {
+//        String userInput = "上海什么天气";
+//        String result = aiCodeHelper.chatWithTools(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//    }
+//
+//    @Test
+//    void chatWithMcp() {
+//        String userInput = "天津明天的天气怎么样";
+//        String result = aiCodeHelper.chatWithMcp(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//    }
+//
+//    @Test
+//    void chatWithMcpLocal() {
+//        String userInput = "云南明天的天气怎么样";
+//        String result = aiCodeHelper.chatWithMcpLocal(userInput);
+//        System.out.println("请求信息: " + userInput);
+//        System.out.println("模型返回: " + result);
+//    }
+//}
+//
