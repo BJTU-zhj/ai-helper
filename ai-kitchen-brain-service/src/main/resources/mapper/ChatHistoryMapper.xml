@@ -4,6 +4,7 @@
   <resultMap id="BaseResultMap" type="com.zhj.learn.aisuperhost.domain.ChatHistory">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="session_id" jdbcType="VARCHAR" property="sessionId" />
+    <result column="turn_no" jdbcType="BIGINT" property="turnNo" />
     <result column="role" jdbcType="VARCHAR" property="role" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
   </resultMap>
@@ -69,7 +70,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, session_id, `role`, created_at
+    id, session_id, turn_no, `role`, created_at
   </sql>
   <sql id="Blob_Column_List">
     content
@@ -123,10 +124,12 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.zhj.learn.aisuperhost.domain.ChatHistory">
-    insert into chat_history (id, session_id, `role`, 
-      created_at, content)
-    values (#{id,jdbcType=BIGINT}, #{sessionId,jdbcType=VARCHAR}, #{role,jdbcType=VARCHAR}, 
-      #{createdAt,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR})
+    insert into chat_history (id, session_id, turn_no, 
+      `role`, created_at, content
+      )
+    values (#{id,jdbcType=BIGINT}, #{sessionId,jdbcType=VARCHAR}, #{turnNo,jdbcType=BIGINT}, 
+      #{role,jdbcType=VARCHAR}, #{createdAt,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.zhj.learn.aisuperhost.domain.ChatHistory">
     insert into chat_history
@@ -136,6 +139,9 @@
       </if>
       <if test="sessionId != null">
         session_id,
+      </if>
+      <if test="turnNo != null">
+        turn_no,
       </if>
       <if test="role != null">
         `role`,
@@ -153,6 +159,9 @@
       </if>
       <if test="sessionId != null">
         #{sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="turnNo != null">
+        #{turnNo,jdbcType=BIGINT},
       </if>
       <if test="role != null">
         #{role,jdbcType=VARCHAR},
@@ -180,6 +189,9 @@
       <if test="row.sessionId != null">
         session_id = #{row.sessionId,jdbcType=VARCHAR},
       </if>
+      <if test="row.turnNo != null">
+        turn_no = #{row.turnNo,jdbcType=BIGINT},
+      </if>
       <if test="row.role != null">
         `role` = #{row.role,jdbcType=VARCHAR},
       </if>
@@ -198,6 +210,7 @@
     update chat_history
     set id = #{row.id,jdbcType=BIGINT},
       session_id = #{row.sessionId,jdbcType=VARCHAR},
+      turn_no = #{row.turnNo,jdbcType=BIGINT},
       `role` = #{row.role,jdbcType=VARCHAR},
       created_at = #{row.createdAt,jdbcType=TIMESTAMP},
       content = #{row.content,jdbcType=LONGVARCHAR}
@@ -209,6 +222,7 @@
     update chat_history
     set id = #{row.id,jdbcType=BIGINT},
       session_id = #{row.sessionId,jdbcType=VARCHAR},
+      turn_no = #{row.turnNo,jdbcType=BIGINT},
       `role` = #{row.role,jdbcType=VARCHAR},
       created_at = #{row.createdAt,jdbcType=TIMESTAMP}
     <if test="example != null">
@@ -220,6 +234,9 @@
     <set>
       <if test="sessionId != null">
         session_id = #{sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="turnNo != null">
+        turn_no = #{turnNo,jdbcType=BIGINT},
       </if>
       <if test="role != null">
         `role` = #{role,jdbcType=VARCHAR},
@@ -236,6 +253,7 @@
   <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.zhj.learn.aisuperhost.domain.ChatHistory">
     update chat_history
     set session_id = #{sessionId,jdbcType=VARCHAR},
+      turn_no = #{turnNo,jdbcType=BIGINT},
       `role` = #{role,jdbcType=VARCHAR},
       created_at = #{createdAt,jdbcType=TIMESTAMP},
       content = #{content,jdbcType=LONGVARCHAR}
@@ -244,6 +262,7 @@
   <update id="updateByPrimaryKey" parameterType="com.zhj.learn.aisuperhost.domain.ChatHistory">
     update chat_history
     set session_id = #{sessionId,jdbcType=VARCHAR},
+      turn_no = #{turnNo,jdbcType=BIGINT},
       `role` = #{role,jdbcType=VARCHAR},
       created_at = #{createdAt,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}

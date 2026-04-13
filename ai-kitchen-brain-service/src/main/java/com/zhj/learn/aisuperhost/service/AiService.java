@@ -18,5 +18,4 @@ public class AiService {
                 .call().content();
     }
 
-
 }

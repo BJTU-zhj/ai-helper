@@ -235,6 +235,66 @@ public class ChatHistoryExample {
             return (Criteria) this;
         }
 
+        public Criteria andTurnNoIsNull() {
+            addCriterion("turn_no is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoIsNotNull() {
+            addCriterion("turn_no is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoEqualTo(Long value) {
+            addCriterion("turn_no =", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoNotEqualTo(Long value) {
+            addCriterion("turn_no <>", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoGreaterThan(Long value) {
+            addCriterion("turn_no >", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoGreaterThanOrEqualTo(Long value) {
+            addCriterion("turn_no >=", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoLessThan(Long value) {
+            addCriterion("turn_no <", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoLessThanOrEqualTo(Long value) {
+            addCriterion("turn_no <=", value, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoIn(List<Long> values) {
+            addCriterion("turn_no in", values, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoNotIn(List<Long> values) {
+            addCriterion("turn_no not in", values, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoBetween(Long value1, Long value2) {
+            addCriterion("turn_no between", value1, value2, "turnNo");
+            return (Criteria) this;
+        }
+
+        public Criteria andTurnNoNotBetween(Long value1, Long value2) {
+            addCriterion("turn_no not between", value1, value2, "turnNo");
+            return (Criteria) this;
+        }
+
         public Criteria andRoleIsNull() {
             addCriterion("`role` is null");
             return (Criteria) this;

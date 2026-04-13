@@ -7,6 +7,8 @@ public class ChatHistory {
 
     private String sessionId;
 
+    private Long turnNo;
+
     private String role;
 
     private Date createdAt;
@@ -27,6 +29,14 @@ public class ChatHistory {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public Long getTurnNo() {
+        return turnNo;
+    }
+
+    public void setTurnNo(Long turnNo) {
+        this.turnNo = turnNo;
     }
 
     public String getRole() {
@@ -61,6 +71,7 @@ public class ChatHistory {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", sessionId=").append(sessionId);
+        sb.append(", turnNo=").append(turnNo);
         sb.append(", role=").append(role);
         sb.append(", createdAt=").append(createdAt);
         sb.append(", content=").append(content);

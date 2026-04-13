@@ -3,7 +3,8 @@
 <mapper namespace="com.zhj.learn.aisuperhost.mapper.ChatSummaryMapper">
   <resultMap id="BaseResultMap" type="com.zhj.learn.aisuperhost.domain.ChatSummary">
     <id column="session_id" jdbcType="VARCHAR" property="sessionId" />
-    <result column="last_turn_id" jdbcType="BIGINT" property="lastTurnId" />
+    <result column="latest_history_id" jdbcType="BIGINT" property="latestHistoryId" />
+    <result column="last_summarized_history_id" jdbcType="BIGINT" property="lastSummarizedHistoryId" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.zhj.learn.aisuperhost.domain.ChatSummary">
@@ -68,7 +69,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    session_id, last_turn_id, updated_at
+    session_id, latest_history_id, last_summarized_history_id, updated_at
   </sql>
   <sql id="Blob_Column_List">
     summary_content
@@ -122,10 +123,10 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
-    insert into chat_summary (session_id, last_turn_id, updated_at, 
-      summary_content)
-    values (#{sessionId,jdbcType=VARCHAR}, #{lastTurnId,jdbcType=BIGINT}, #{updatedAt,jdbcType=TIMESTAMP}, 
-      #{summaryContent,jdbcType=LONGVARCHAR})
+    insert into chat_summary (session_id, latest_history_id, last_summarized_history_id, 
+      updated_at, summary_content)
+    values (#{sessionId,jdbcType=VARCHAR}, #{latestHistoryId,jdbcType=BIGINT}, #{lastSummarizedHistoryId,jdbcType=BIGINT}, 
+      #{updatedAt,jdbcType=TIMESTAMP}, #{summaryContent,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
     insert into chat_summary
@@ -133,8 +134,11 @@
       <if test="sessionId != null">
         session_id,
       </if>
-      <if test="lastTurnId != null">
-        last_turn_id,
+      <if test="latestHistoryId != null">
+        latest_history_id,
+      </if>
+      <if test="lastSummarizedHistoryId != null">
+        last_summarized_history_id,
       </if>
       <if test="updatedAt != null">
         updated_at,
@@ -147,8 +151,11 @@
       <if test="sessionId != null">
         #{sessionId,jdbcType=VARCHAR},
       </if>
-      <if test="lastTurnId != null">
-        #{lastTurnId,jdbcType=BIGINT},
+      <if test="latestHistoryId != null">
+        #{latestHistoryId,jdbcType=BIGINT},
+      </if>
+      <if test="lastSummarizedHistoryId != null">
+        #{lastSummarizedHistoryId,jdbcType=BIGINT},
       </if>
       <if test="updatedAt != null">
         #{updatedAt,jdbcType=TIMESTAMP},
@@ -170,8 +177,11 @@
       <if test="row.sessionId != null">
         session_id = #{row.sessionId,jdbcType=VARCHAR},
       </if>
-      <if test="row.lastTurnId != null">
-        last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      <if test="row.latestHistoryId != null">
+        latest_history_id = #{row.latestHistoryId,jdbcType=BIGINT},
+      </if>
+      <if test="row.lastSummarizedHistoryId != null">
+        last_summarized_history_id = #{row.lastSummarizedHistoryId,jdbcType=BIGINT},
       </if>
       <if test="row.updatedAt != null">
         updated_at = #{row.updatedAt,jdbcType=TIMESTAMP},
@@ -187,7 +197,8 @@
   <update id="updateByExampleWithBLOBs" parameterType="map">
     update chat_summary
     set session_id = #{row.sessionId,jdbcType=VARCHAR},
-      last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      latest_history_id = #{row.latestHistoryId,jdbcType=BIGINT},
+      last_summarized_history_id = #{row.lastSummarizedHistoryId,jdbcType=BIGINT},
       updated_at = #{row.updatedAt,jdbcType=TIMESTAMP},
       summary_content = #{row.summaryContent,jdbcType=LONGVARCHAR}
     <if test="example != null">
@@ -197,7 +208,8 @@
   <update id="updateByExample" parameterType="map">
     update chat_summary
     set session_id = #{row.sessionId,jdbcType=VARCHAR},
-      last_turn_id = #{row.lastTurnId,jdbcType=BIGINT},
+      latest_history_id = #{row.latestHistoryId,jdbcType=BIGINT},
+      last_summarized_history_id = #{row.lastSummarizedHistoryId,jdbcType=BIGINT},
       updated_at = #{row.updatedAt,jdbcType=TIMESTAMP}
     <if test="example != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -206,8 +218,11 @@
   <update id="updateByPrimaryKeySelective" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
     update chat_summary
     <set>
-      <if test="lastTurnId != null">
-        last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+      <if test="latestHistoryId != null">
+        latest_history_id = #{latestHistoryId,jdbcType=BIGINT},
+      </if>
+      <if test="lastSummarizedHistoryId != null">
+        last_summarized_history_id = #{lastSummarizedHistoryId,jdbcType=BIGINT},
       </if>
       <if test="updatedAt != null">
         updated_at = #{updatedAt,jdbcType=TIMESTAMP},
@@ -220,14 +235,16 @@
   </update>
   <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
     update chat_summary
-    set last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+    set latest_history_id = #{latestHistoryId,jdbcType=BIGINT},
+      last_summarized_history_id = #{lastSummarizedHistoryId,jdbcType=BIGINT},
       updated_at = #{updatedAt,jdbcType=TIMESTAMP},
       summary_content = #{summaryContent,jdbcType=LONGVARCHAR}
     where session_id = #{sessionId,jdbcType=VARCHAR}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.zhj.learn.aisuperhost.domain.ChatSummary">
     update chat_summary
-    set last_turn_id = #{lastTurnId,jdbcType=BIGINT},
+    set latest_history_id = #{latestHistoryId,jdbcType=BIGINT},
+      last_summarized_history_id = #{lastSummarizedHistoryId,jdbcType=BIGINT},
       updated_at = #{updatedAt,jdbcType=TIMESTAMP}
     where session_id = #{sessionId,jdbcType=VARCHAR}
   </update>

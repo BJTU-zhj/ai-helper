@@ -52,8 +52,9 @@ Parent reactor order (current):
 #### `ai-kitchen-brain-service`
 - Spring MVC + Actuator
 - Spring AI (`spring-ai-starter-model-openai`)
+- MyBatis + MySQL (generator + mapper already introduced)
 - Depends on `ai-common`
-- Current state: scaffold/skeleton, business content still to be implemented
+- Current state: session-memory initial chain is running
 
 #### `ai-gateway`
 - Spring Cloud Gateway (WebFlux server starter)
@@ -86,7 +87,7 @@ note: application name and module name are intentionally different.
 
 ## 5. Key Entry Points and API Surface
 
-### Code assistant service
+### Utility agent service
 Main controller: `AiHelperController`
 - `GET /aihelper/chat/{message}`
 - `GET /aihelper/chatStream/{memoryId}/{message}`
@@ -94,6 +95,16 @@ Main controller: `AiHelperController`
 Gateway access examples:
 - `GET /code-assistant/aihelper/chat/{message}`
 - `GET /code-assistant/aihelper/chatStream/{memoryId}/{message}`
+
+### Kitchen brain service (implemented baseline)
+Main controller: `SessionController`
+- `GET /brain/chat/{sessionId}/{message}`
+
+Current behavior:
+- uses `sessionId` as conversation id
+- uses Spring AI `MessageChatMemoryAdvisor`
+- memory repository is currently `InMemoryChatMemoryRepository`
+- multi-turn conversation works for the same `sessionId` during process lifetime
 
 ### Gateway forwarding logs
 `GatewayForwardLogFilter` prints logs like:
@@ -114,6 +125,14 @@ Gateway access examples:
 - `ControllerExceptionHandler` handles:
   - `BusinessException`
   - `MethodArgumentNotValidException`
+
+### Memory implementation status in `ai-kitchen-brain-service`
+- `ChatClient` default advisor is wired to memory advisor.
+- `AiService.chat(memoryId, message)` passes `ChatMemory.CONVERSATION_ID`.
+- `MyChatMemory` uses `MessageWindowChatMemory(maxMessages=10)`.
+- MyBatis entities/mappers for `chat_summary`/`chat_history`/`session` exist.
+- DB smoke test controller exists (`/test/mybatis/session`, `/test/mybatis/session/{id}`).
+- Important: DB memory tables are not yet integrated into the runtime chat-memory pipeline.
 
 ## 7. Build / Run Instructions
 
@@ -148,14 +167,16 @@ Keep `settings.xml` and `maven.repo.local` consistent across commands/IDE.
 ### Done
 - Monolith split into Maven multi-module microservices
 - `ai-gateway` created and routing configured
-- `ai-kitchen-brain-service` scaffold created with Spring AI
+- `ai-kitchen-brain-service` Spring AI chat + in-memory session memory chain is running
 - `ai-common` introduced and integrated
 - Shared AOP + global exception handler added
 - Gateway forward logging feature implemented
-- Root compile currently passes
+- MyBatis generator + mapper/domain for memory tables has been introduced
+- Root compile previously passed (re-validate after every generator run)
 
 ### In progress / not yet implemented
-- `ai-kitchen-brain-service` business logic (agent capabilities)
+- `ai-kitchen-brain-service` memory persistence pipeline (Redis/MySQL async summary) not yet integrated
+- `chat_summary` read/write is not yet part of main chat path
 - richer gateway capabilities (auth, rate-limit, etc.)
 - service discovery / config center / distributed governance (if needed)
 
@@ -165,6 +186,8 @@ Keep `settings.xml` and `maven.repo.local` consistent across commands/IDE.
 - Recommended action:
   - move keys to environment variables / secret manager
   - avoid committing plaintext keys
+
+Also check and clean accidental generated artifacts from repo root if present (e.g. `META-INF/`, `org/`) before commit.
 
 ## 11. Suggested Prompt to Another LLM
 
@@ -186,4 +209,27 @@ Do not change gateway routes.
 
 ---
 
-Last updated: 2026-04-12 (Asia/Shanghai)
+## 12. Recommended Next Steps (Execution Order)
+
+1. Integrate `chat_summary` into chat path.
+- On first message of a `sessionId`, create summary row if absent.
+- On each turn, update `updated_at` and `last_turn_id` minimally.
+
+2. Split memory store interface from implementation.
+- Keep current `InMemoryChatMemoryRepository` as V1.
+- Add abstraction so Redis/MySQL implementation can replace it without controller/service rewrite.
+
+3. Persist chat history asynchronously.
+- Main path: respond first.
+- Async path: append chat_history + summary update task.
+
+4. Introduce rolling summary worker.
+- Trigger by window overflow or turn threshold.
+- Input: old summary + evicted turns.
+- Output: new summary_content + last_turn_id.
+
+5. Align naming and routes gradually.
+- Module names are already migrated (`ai-kitchen-brain-service` / `ai-utility-agent-service`).
+- Application names and gateway route ids/paths can be migrated in a compatibility window.
+
+Last updated: 2026-04-13 (Asia/Shanghai)

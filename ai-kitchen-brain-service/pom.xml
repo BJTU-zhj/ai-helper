@@ -83,12 +83,27 @@
         </dependency>
 
         <!--
+          Redis 集成，用于会话短期记忆（窗口）与摘要缓存。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!--
           Knife4j 集成，提供接口文档能力，
           基于 Spring Boot 3.x 集成，支持 Jakarta EE 9.x。
         -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

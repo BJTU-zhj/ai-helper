@@ -41,10 +41,9 @@
                              targetPackage="com.zhj.learn.aisuperhost.mapper"
                              type="XMLMAPPER"/>
 
-<!--        <table tableName="session" domainObjectName="Session"/>-->
-
-<!--                <table tableName="chat_history" domainObjectName="ChatHistory"/>-->
-                <table tableName="chat_summary" domainObjectName="ChatSummary"/>
+        <table tableName="session" domainObjectName="Session"/>
+        <table tableName="chat_history" domainObjectName="ChatHistory"/>
+        <table tableName="chat_summary" domainObjectName="ChatSummary"/>
 
     </context>
 </generatorConfiguration>

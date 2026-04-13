@@ -134,6 +134,16 @@
                 <version>${mysql.driver.version}</version>
             </dependency>
 
+            <!--
+              统一管理 Lombok 依赖版本，子模块只声明 lombok 依赖即可，
+              避免在每个服务里手动写版本号并减少版本冲突风险。
+            -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.30</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>

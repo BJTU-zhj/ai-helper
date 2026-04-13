@@ -175,63 +175,123 @@ public class ChatSummaryExample {
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdIsNull() {
-            addCriterion("last_turn_id is null");
+        public Criteria andLatestHistoryIdIsNull() {
+            addCriterion("latest_history_id is null");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdIsNotNull() {
-            addCriterion("last_turn_id is not null");
+        public Criteria andLatestHistoryIdIsNotNull() {
+            addCriterion("latest_history_id is not null");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdEqualTo(Long value) {
-            addCriterion("last_turn_id =", value, "lastTurnId");
+        public Criteria andLatestHistoryIdEqualTo(Long value) {
+            addCriterion("latest_history_id =", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdNotEqualTo(Long value) {
-            addCriterion("last_turn_id <>", value, "lastTurnId");
+        public Criteria andLatestHistoryIdNotEqualTo(Long value) {
+            addCriterion("latest_history_id <>", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdGreaterThan(Long value) {
-            addCriterion("last_turn_id >", value, "lastTurnId");
+        public Criteria andLatestHistoryIdGreaterThan(Long value) {
+            addCriterion("latest_history_id >", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdGreaterThanOrEqualTo(Long value) {
-            addCriterion("last_turn_id >=", value, "lastTurnId");
+        public Criteria andLatestHistoryIdGreaterThanOrEqualTo(Long value) {
+            addCriterion("latest_history_id >=", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdLessThan(Long value) {
-            addCriterion("last_turn_id <", value, "lastTurnId");
+        public Criteria andLatestHistoryIdLessThan(Long value) {
+            addCriterion("latest_history_id <", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdLessThanOrEqualTo(Long value) {
-            addCriterion("last_turn_id <=", value, "lastTurnId");
+        public Criteria andLatestHistoryIdLessThanOrEqualTo(Long value) {
+            addCriterion("latest_history_id <=", value, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdIn(List<Long> values) {
-            addCriterion("last_turn_id in", values, "lastTurnId");
+        public Criteria andLatestHistoryIdIn(List<Long> values) {
+            addCriterion("latest_history_id in", values, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdNotIn(List<Long> values) {
-            addCriterion("last_turn_id not in", values, "lastTurnId");
+        public Criteria andLatestHistoryIdNotIn(List<Long> values) {
+            addCriterion("latest_history_id not in", values, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdBetween(Long value1, Long value2) {
-            addCriterion("last_turn_id between", value1, value2, "lastTurnId");
+        public Criteria andLatestHistoryIdBetween(Long value1, Long value2) {
+            addCriterion("latest_history_id between", value1, value2, "latestHistoryId");
             return (Criteria) this;
         }
 
-        public Criteria andLastTurnIdNotBetween(Long value1, Long value2) {
-            addCriterion("last_turn_id not between", value1, value2, "lastTurnId");
+        public Criteria andLatestHistoryIdNotBetween(Long value1, Long value2) {
+            addCriterion("latest_history_id not between", value1, value2, "latestHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdIsNull() {
+            addCriterion("last_summarized_history_id is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdIsNotNull() {
+            addCriterion("last_summarized_history_id is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdEqualTo(Long value) {
+            addCriterion("last_summarized_history_id =", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdNotEqualTo(Long value) {
+            addCriterion("last_summarized_history_id <>", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdGreaterThan(Long value) {
+            addCriterion("last_summarized_history_id >", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdGreaterThanOrEqualTo(Long value) {
+            addCriterion("last_summarized_history_id >=", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdLessThan(Long value) {
+            addCriterion("last_summarized_history_id <", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdLessThanOrEqualTo(Long value) {
+            addCriterion("last_summarized_history_id <=", value, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdIn(List<Long> values) {
+            addCriterion("last_summarized_history_id in", values, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdNotIn(List<Long> values) {
+            addCriterion("last_summarized_history_id not in", values, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdBetween(Long value1, Long value2) {
+            addCriterion("last_summarized_history_id between", value1, value2, "lastSummarizedHistoryId");
+            return (Criteria) this;
+        }
+
+        public Criteria andLastSummarizedHistoryIdNotBetween(Long value1, Long value2) {
+            addCriterion("last_summarized_history_id not between", value1, value2, "lastSummarizedHistoryId");
             return (Criteria) this;
         }
 

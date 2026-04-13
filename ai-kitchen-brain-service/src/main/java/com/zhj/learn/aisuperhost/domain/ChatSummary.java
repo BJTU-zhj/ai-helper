@@ -5,7 +5,9 @@ import java.util.Date;
 public class ChatSummary {
     private String sessionId;
 
-    private Long lastTurnId;
+    private Long latestHistoryId;
+
+    private Long lastSummarizedHistoryId;
 
     private Date updatedAt;
 
@@ -19,12 +21,20 @@ public class ChatSummary {
         this.sessionId = sessionId;
     }
 
-    public Long getLastTurnId() {
-        return lastTurnId;
+    public Long getLatestHistoryId() {
+        return latestHistoryId;
     }
 
-    public void setLastTurnId(Long lastTurnId) {
-        this.lastTurnId = lastTurnId;
+    public void setLatestHistoryId(Long latestHistoryId) {
+        this.latestHistoryId = latestHistoryId;
+    }
+
+    public Long getLastSummarizedHistoryId() {
+        return lastSummarizedHistoryId;
+    }
+
+    public void setLastSummarizedHistoryId(Long lastSummarizedHistoryId) {
+        this.lastSummarizedHistoryId = lastSummarizedHistoryId;
     }
 
     public Date getUpdatedAt() {
@@ -50,7 +60,8 @@ public class ChatSummary {
         sb.append(" [");
         sb.append("Hash = ").append(hashCode());
         sb.append(", sessionId=").append(sessionId);
-        sb.append(", lastTurnId=").append(lastTurnId);
+        sb.append(", latestHistoryId=").append(latestHistoryId);
+        sb.append(", lastSummarizedHistoryId=").append(lastSummarizedHistoryId);
         sb.append(", updatedAt=").append(updatedAt);
         sb.append(", summaryContent=").append(summaryContent);
         sb.append("]");
