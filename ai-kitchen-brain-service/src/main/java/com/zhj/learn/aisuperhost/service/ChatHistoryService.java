@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,42 @@ public class ChatHistoryService {
             return 0L;
         }
         return histories.get(0).getTurnNo();
+    }
+
+    // 获取下一轮轮次
+    public long nextTurnNo(String sessionId) {
+        return getMaxTurnNo(sessionId) + 1;
+    }
+
+    // 新增一条历史记录
+    public ChatHistory addHistory(long id, String sessionId, long turnNo, String role, String content, Date createdAt) {
+        ChatHistory history = new ChatHistory();
+        history.setId(id);
+        history.setSessionId(sessionId);
+        history.setTurnNo(turnNo);
+        history.setRole(role);
+        history.setContent(content == null ? "" : content);
+        history.setCreatedAt(createdAt == null ? new Date() : createdAt);
+        chatHistoryMapper.insertSelective(history);
+        return history;
+    }
+
+    // 按会话+轮次查询 assistant 那条历史ID（用于推进摘要游标）
+    public Long getAssistantHistoryId(String sessionId, Long turnNo) {
+        if (sessionId == null || sessionId.isBlank() || turnNo == null) {
+            return null;
+        }
+        ChatHistoryExample example = new ChatHistoryExample();
+        example.createCriteria()
+                .andSessionIdEqualTo(sessionId)
+                .andTurnNoEqualTo(turnNo)
+                .andRoleEqualTo("assistant");
+        example.setOrderByClause("created_at desc");
+        List<ChatHistory> histories = chatHistoryMapper.selectByExample(example);
+        if (histories == null || histories.isEmpty()) {
+            return null;
+        }
+        return histories.get(0).getId();
     }
 
     private boolean isUser(String role) {

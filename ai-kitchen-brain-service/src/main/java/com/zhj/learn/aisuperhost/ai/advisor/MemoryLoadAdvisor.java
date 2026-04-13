@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class RedisWindowSummaryAdvisor implements BaseChatMemoryAdvisor {
+public class MemoryLoadAdvisor implements BaseChatMemoryAdvisor {
 
 
     @Autowired
@@ -90,7 +90,7 @@ public class RedisWindowSummaryAdvisor implements BaseChatMemoryAdvisor {
 
     @Override
     public int getOrder() {
-        return 0;
+        return 100;
     }
 
 
