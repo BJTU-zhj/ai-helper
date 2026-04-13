@@ -18,7 +18,8 @@ mybatis:
 logging:
   level:
     com.zhj.learn.aisuperhost.mapper: debug
-
+    org.springframework.ai.openai: DEBUG
+    org.springframework.web.client: DEBUG
 
 # springdoc-openapi项目配置
 springdoc:
