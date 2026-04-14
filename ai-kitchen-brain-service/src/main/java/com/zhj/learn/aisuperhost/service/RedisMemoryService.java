@@ -16,6 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Redis 存储服务
+ */
+
 @Service
 @Getter
 public class RedisMemoryService {

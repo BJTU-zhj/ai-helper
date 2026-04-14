@@ -14,6 +14,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 会话历史记录服务
+ */
+
 @Service
 public class ChatHistoryService {
 

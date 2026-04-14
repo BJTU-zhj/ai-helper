@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+/**
+ * 会话摘要服务
+ */
+
 @Service
 public class ChatSummaryService {
 
