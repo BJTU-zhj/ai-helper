@@ -138,6 +138,41 @@ public class ChatHistoryService {
         return histories.get(0).getId();
     }
 
+    // 按会话+轮次组装一轮对话（user + assistant）
+    public WindowTurn getWindowTurnByTurnNo(String sessionId, Long turnNo) {
+        if (sessionId == null || sessionId.isBlank() || turnNo == null) {
+            return null;
+        }
+
+        ChatHistoryExample example = new ChatHistoryExample();
+        example.createCriteria()
+                .andSessionIdEqualTo(sessionId)
+                .andTurnNoEqualTo(turnNo);
+        example.setOrderByClause("id asc");
+
+        List<ChatHistory> histories = chatHistoryMapper.selectByExampleWithBLOBs(example);
+        if (histories == null || histories.isEmpty()) {
+            return null;
+        }
+
+        WindowTurn turn = new WindowTurn();
+        turn.setTurnNo(turnNo);
+        for (ChatHistory history : histories) {
+            if (history == null) {
+                continue;
+            }
+            if (isUser(history.getRole())) {
+                turn.setUserContent(history.getContent());
+            } else if (isAssistant(history.getRole())) {
+                turn.setAssistantContent(history.getContent());
+            }
+            if (history.getCreatedAt() != null) {
+                turn.setCreatedAtMillis(history.getCreatedAt().getTime());
+            }
+        }
+        return turn;
+    }
+
     private boolean isUser(String role) {
         return "user".equalsIgnoreCase(role);
     }

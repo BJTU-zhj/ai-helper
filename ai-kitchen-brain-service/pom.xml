@@ -91,6 +91,16 @@
         </dependency>
 
         <!--
+          RocketMQ Spring Boot Starter，用于摘要生成异步化（延迟消息、重试、死信队列）。
+          说明：当前父 POM 未统一管理 RocketMQ 版本，这里显式指定版本避免解析歧义。
+        -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
+        <!--
           Knife4j 集成，提供接口文档能力，
           基于 Spring Boot 3.x 集成，支持 Jakarta EE 9.x。
         -->

@@ -3,6 +3,10 @@ package com.zhj.learn.aisuperhost.service;
 import com.zhj.learn.aicommon.util.SnowUtil;
 import com.zhj.learn.aisuperhost.domain.ChatSummary;
 import com.zhj.learn.aisuperhost.domain.WindowTurn;
+import com.zhj.learn.aisuperhost.mq.SummaryGenerateEvent;
+import com.zhj.learn.aisuperhost.mq.SummaryTaskProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,12 +27,14 @@ import java.util.Objects;
  */
 @Service
 public class MemoryPersistService {
+    private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistService.class);
 
     private final ChatSummaryService chatSummaryService;
     private final ChatHistoryService chatHistoryService;
     private final SessionService sessionService;
     private final RedisMemoryService redisMemoryService;
     private final ChatClient deepSeekChatClient;
+    private final SummaryTaskProducer summaryTaskProducer;
 
     @Value("classpath:template/summary-generate.st")
     private org.springframework.core.io.Resource summaryTemplate;
@@ -37,12 +43,14 @@ public class MemoryPersistService {
                                 ChatHistoryService chatHistoryService,
                                 SessionService sessionService,
                                 RedisMemoryService redisMemoryService,
-                                @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient) {
+                                @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient,
+                                SummaryTaskProducer summaryTaskProducer) {
         this.chatSummaryService = chatSummaryService;
         this.chatHistoryService = chatHistoryService;
         this.sessionService = sessionService;
         this.redisMemoryService = redisMemoryService;
         this.deepSeekChatClient = deepSeekChatClient;
+        this.summaryTaskProducer = summaryTaskProducer;
     }
 
     /**
@@ -95,24 +103,58 @@ public class MemoryPersistService {
      * after 主流程：写历史、更新窗口、按挤出触发摘要。
      */
     public void persistAfterTurn(String sessionId, String userInput, String assistantOutput) {
+        LOG.info("persistAfterTurn begin. sessionId={}", sessionId);
         WindowTurn evictedWindowTurn = redisMemoryService.getAboutToEvictWindowTurn(sessionId);
         WindowTurn currentTurn = persistTurnTxA(sessionId, userInput, assistantOutput);
         redisMemoryService.appendWindowTurn(sessionId, currentTurn);
+        LOG.info("persistAfterTurn window updated. sessionId={}, currentTurnNo={}, evictedTurnNo={}",
+                sessionId,
+                currentTurn == null ? null : currentTurn.getTurnNo(),
+                evictedWindowTurn == null ? null : evictedWindowTurn.getTurnNo());
 
         if (evictedWindowTurn != null) {
-            String oldSummary = loadSummary(sessionId);
-            String newSummary = generateRollingSummary(oldSummary, List.of(evictedWindowTurn));
-            Long lastSummarizedHistoryId = chatHistoryService.getAssistantHistoryId(sessionId, evictedWindowTurn.getTurnNo());
-            if (lastSummarizedHistoryId != null) {
-                chatSummaryService.updateSummaryAfterGenerated(
-                        sessionId,
-                        newSummary,
-                        lastSummarizedHistoryId,
-                        new Date()
-                );
-            }
-            redisMemoryService.saveSummary(sessionId, newSummary);
+            SummaryGenerateEvent event = new SummaryGenerateEvent();
+            event.setEventId(SnowUtil.getSnowflakeIdStr());
+            event.setSessionId(sessionId);
+            event.setEvictedTurnNo(evictedWindowTurn.getTurnNo());
+            event.setTriggerAt(new Date());
+            summaryTaskProducer.sendOrderly(event);
+        } else {
+            LOG.info("persistAfterTurn skip summary task because no evicted turn. sessionId={}", sessionId);
         }
+    }
+
+    /**
+     * 处理摘要任务（由 MQ consumer 调用）：
+     * 1) 生成新摘要
+     * 2) 更新 MySQL 摘要与游标
+     * 3) 更新 Redis 摘要缓存
+     */
+    public void handleSummaryGenerateEvent(SummaryGenerateEvent event) {
+        if (event == null || event.getSessionId() == null || event.getSessionId().isBlank() || event.getEvictedTurnNo() == null) {
+            throw new IllegalArgumentException("invalid summary event");
+        }
+
+        String sessionId = event.getSessionId();
+        Long evictedTurnNo = event.getEvictedTurnNo();
+        LOG.info("handleSummaryGenerateEvent begin. eventId={}, sessionId={}, turnNo={}",
+                event.getEventId(), sessionId, evictedTurnNo);
+        WindowTurn evictedTurn = chatHistoryService.getWindowTurnByTurnNo(sessionId, evictedTurnNo);
+        if (evictedTurn == null) {
+            throw new IllegalArgumentException("evicted turn not found, sessionId=" + sessionId + ", turnNo=" + evictedTurnNo);
+        }
+
+        String oldSummary = loadSummary(sessionId);
+        String newSummary = generateRollingSummary(oldSummary, List.of(evictedTurn));
+        Long lastSummarizedHistoryId = chatHistoryService.getAssistantHistoryId(sessionId, evictedTurnNo);
+        if (lastSummarizedHistoryId == null) {
+            throw new IllegalArgumentException("assistant history id not found, sessionId=" + sessionId + ", turnNo=" + evictedTurnNo);
+        }
+
+        chatSummaryService.updateSummaryAfterGenerated(sessionId, newSummary, lastSummarizedHistoryId, new Date());
+        redisMemoryService.saveSummary(sessionId, newSummary);
+        LOG.info("summary generated and updated. eventId={}, sessionId={}, turnNo={}",
+                event.getEventId(), sessionId, evictedTurnNo);
     }
 
     /**
