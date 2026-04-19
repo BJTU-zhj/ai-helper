@@ -83,6 +83,46 @@
         </dependency>
 
         <!--
+          JDBC 基础能力，用于 RAG 检索阶段直接执行 PostgreSQL SQL（关键词召回、向量召回、融合查询等）。
+          说明：MyBatis 主要服务现有 MySQL 业务表；RAG 检索建议通过独立 JDBC/Template 走 PostgreSQL。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!--
+          PostgreSQL 驱动，供 RAG 知识库库（PostgreSQL + pgvector + pg_jieba）连接使用。
+          scope=runtime 避免在编译产物中引入不必要依赖体积。
+        -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            引入soring ai Rag 相关依赖，可以使用
+            QueryTransformer（检索前）
+            DocumentRetriever（检索中）
+            DocumentJoiner / rerank（检索后）
+          -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-rag</artifactId>
+        </dependency>
+
+        <!--
+          Spring AI PgVector 向量存储 Starter。
+          用于后续对接标准化向量检索流程（DocumentWriter / VectorStore / Retriever 组合）。
+          即使当前先自定义双路召回，也建议提前引入，便于后续平滑切换。
+        -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+        </dependency>
+
+        <!--
           Redis 集成，用于会话短期记忆（窗口）与摘要缓存。
         -->
         <dependency>

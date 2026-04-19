@@ -4,6 +4,7 @@ import com.zhj.learn.aisuperhost.ai.advisor.MemoryLoadAdvisor;
 import com.zhj.learn.aisuperhost.ai.advisor.MemoryPersistAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +16,12 @@ public class MyChatClient {
     @Bean
     public ChatClient qwenChatClient(@Qualifier("qwenChatModel") ChatModel qwenChatModel,
                                      MemoryLoadAdvisor memoryLoadAdvisor,
+                                     RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
                                      MemoryPersistAdvisor memoryPersistAdvisor) {
 
         return ChatClient.builder(qwenChatModel)
-                .defaultAdvisors(memoryLoadAdvisor, memoryPersistAdvisor)
+                // 顺序：记忆加载 -> RAG 检索增强 -> 记忆持久化
+                .defaultAdvisors(memoryLoadAdvisor, retrievalAugmentationAdvisor, memoryPersistAdvisor)
                 .build();
     }
 

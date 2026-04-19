@@ -12,6 +12,7 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class MyChatModelConfig {
@@ -31,6 +32,12 @@ public class MyChatModelConfig {
 
     @Value("${spring.ai.model.qwen.embedding.model-name}")
     private String qwenEmbeddingModelName;
+
+    @Value("${spring.ai.model.qwen.rerank.api-key}")
+    private String qwenRerankApiKey;
+
+    @Value("${spring.ai.model.qwen.rerank.model-name}")
+    private String qwenRerankModelName;
 
     //deepseek
     @Value("${spring.ai.model.deepseek.base-url}")
@@ -66,6 +73,7 @@ public class MyChatModelConfig {
 
     //创建千问向量模型
     @Bean
+    @Primary
     public EmbeddingModel qwenEmbeddingModel() {
 
         OpenAiApi openAiApi = OpenAiApi.builder()
@@ -78,6 +86,26 @@ public class MyChatModelConfig {
                 .build();
 
         return new OpenAiEmbeddingModel(openAiApi, MetadataMode.NONE, options);
+    }
+
+    //创建千问重排模型（作为打分模型调用）
+    @Bean(name = "qwenRerankChatModel")
+    public ChatModel qwenRerankChatModel() {
+
+        OpenAiApi openAiApi = OpenAiApi.builder()
+                .apiKey(qwenRerankApiKey)
+                .baseUrl(qwenBaseUrl)
+                .build();
+
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+                .model(qwenRerankModelName)
+                .temperature(0.0)
+                .build();
+
+        return OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(options)
+                .build();
     }
 
 
