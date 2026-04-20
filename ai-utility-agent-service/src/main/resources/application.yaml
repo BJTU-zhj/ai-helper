@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ai-code-assistant-service
+    name: ai-utility-agent-service
   profiles:
     active: local
 server:

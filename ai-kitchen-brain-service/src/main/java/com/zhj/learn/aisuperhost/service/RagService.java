@@ -140,19 +140,35 @@ public class RagService {
             return List.of();
         }
         String sql = """
+                WITH query_terms AS (
+                    SELECT ARRAY(
+                        SELECT DISTINCT term
+                        FROM unnest(tsvector_to_array(to_tsvector(CAST(? AS regconfig), ?))) AS term
+                        WHERE term <> ''
+                    ) AS terms
+                ),
+                query_ts AS (
+                    SELECT
+                        CASE
+                            WHEN COALESCE(array_length(terms, 1), 0) = 0 THEN NULL
+                            ELSE to_tsquery(CAST(? AS regconfig), array_to_string(terms, ' | '))
+                        END AS tsq
+                    FROM query_terms
+                )
                 SELECT
                     chunk_id,
                     doc_id,
                     content,
-                    ts_rank_cd(content_tsv, plainto_tsquery(CAST(? AS regconfig), ?)) AS keyword_score
-                FROM %s
-                WHERE content_tsv @@ plainto_tsquery(CAST(? AS regconfig), ?)
+                    ts_rank_cd(content_tsv, query_ts.tsq) AS keyword_score
+                FROM %s, query_ts
+                WHERE query_ts.tsq IS NOT NULL
+                  AND content_tsv @@ query_ts.tsq
                 ORDER BY keyword_score DESC
                 LIMIT ?
                 """.formatted(ragKbTable);
 
         return ragJdbcTemplate.query(sql, (rs, rowNum) -> mapKeywordHit(rs),
-                ragTsConfig, queryText, ragTsConfig, queryText, topK);
+                ragTsConfig, queryText, ragTsConfig, topK);
     }
 
     /**

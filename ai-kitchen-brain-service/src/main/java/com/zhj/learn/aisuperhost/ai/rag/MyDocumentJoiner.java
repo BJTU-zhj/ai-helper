@@ -1,34 +1,29 @@
 package com.zhj.learn.aisuperhost.ai.rag;
 
 import com.zhj.learn.aisuperhost.config.RagConfig;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.join.DocumentJoiner;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
+import org.springframework.web.client.RestClient;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 /**
  * 自定义 DocumentJoiner：
  * 1) 对多路候选做 RRF（Reciprocal Rank Fusion）融合打分；
- * 2) 调用 qwen3-vl-rerank 模型做语义重排序；
+ * 2) 调用 DashScope Rerank 接口做语义重排序；
  * 3) 返回最终 topK 文档供后续提示词拼装。
  *
  * <p>输入约定：
@@ -40,29 +35,20 @@ import java.util.regex.Pattern;
  */
 public class MyDocumentJoiner implements DocumentJoiner {
 
-    private static final Pattern SCORE_PATTERN = Pattern.compile("([01](?:\\.\\d+)?)");
-
     @Resource
     private RagConfig ragConfig;
 
-    @Resource(name = "qwenRerankChatClient")
-    private ChatClient qwenRerankChatClient;
+    @Resource
+    private RestClient.Builder restClientBuilder;
 
-    @Value("classpath:template/rag-rerank-system.st")
-    private org.springframework.core.io.Resource rerankSystemPromptResource;
+    @Value("${spring.ai.model.qwen.rerank.api-key}")
+    private String qwenRerankApiKey;
 
-    /**
-     * 重排模型 System Prompt（从 st 文件读取后缓存）。
-     */
-    private String rerankSystemPrompt;
+    @Value("${spring.ai.model.qwen.rerank.model-name:qwen3-vl-rerank}")
+    private String qwenRerankModelName;
 
-    @PostConstruct
-    public void initRerankSystemPrompt() throws IOException {
-        this.rerankSystemPrompt = StreamUtils.copyToString(
-                rerankSystemPromptResource.getInputStream(),
-                StandardCharsets.UTF_8
-        ).trim();
-    }
+    @Value("${spring.ai.model.qwen.rerank.endpoint:https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank}")
+    private String qwenRerankEndpoint;
 
     @Override
     public List<Document> join(Map<Query, List<List<Document>>> documentsForQuery) {
@@ -179,60 +165,86 @@ public class MyDocumentJoiner implements DocumentJoiner {
         double wRrf = 0.35D;
         double wModel = 0.65D;
 
+        List<String> documentTexts = docs.stream()
+                .map(sd -> safeText(sd.document.getText()))
+                .toList();
 
-        for (ScoredDocument sd : docs) {
-            double modelScore = safeRerankScore(qwenRerankChatClient, queryText, sd.document.getText());
+        Map<Integer, Double> rerankScores = batchRerankScores(queryText, documentTexts);
+
+        for (int i = 0; i < docs.size(); i++) {
+            ScoredDocument sd = docs.get(i);
+            double modelScore = rerankScores.getOrDefault(i, 0.0D);
             sd.setModelScore(modelScore);
             sd.setFinalScore(wRrf * sd.rrfScore() + wModel * modelScore);
         }
         return docs;
     }
 
-    private double safeRerankScore(ChatClient client, String queryText, String docText) {
+    /**
+     * 调用 DashScope Rerank 专用接口进行批量重排打分。
+     * 返回值：key=候选文档在输入列表中的索引，value=相关性分数（0~1）。
+     */
+    private Map<Integer, Double> batchRerankScores(String queryText, List<String> documents) {
+        Map<Integer, Double> scores = new HashMap<>();
+        if (documents == null || documents.isEmpty()) {
+            return scores;
+        }
+
         try {
-            String user = """
-                    用户问题：%s
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("model", qwenRerankModelName);
 
-                    候选文档：
-                    %s
-                    """.formatted(safeText(queryText), safeText(docText));
+            Map<String, Object> input = new HashMap<>();
+            input.put("query", safeText(queryText));
+            input.put("documents", documents);
+            payload.put("input", input);
 
-            String content = client.prompt()
-                    .system(rerankSystemPrompt)
-                    .user(user)
-                    .call()
-                    .content();
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("return_documents", false);
+            parameters.put("top_n", documents.size());
+            payload.put("parameters", parameters);
 
-            return clamp01(parseScore(content));
+            RestClient restClient = restClientBuilder.build();
+            Map<String, Object> response = restClient.post()
+                    .uri(qwenRerankEndpoint)
+                    .header("Authorization", "Bearer " + qwenRerankApiKey)
+                    .header("Content-Type", "application/json")
+                    .body(payload)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {
+                    });
+
+            parseRerankResponse(scores, response);
         } catch (Exception e) {
             log.error("rerank model scoring failed", e);
-            return 0.0D;
         }
+
+        return scores;
     }
 
-    private double parseScore(String text) {
-        if (text == null) {
-            return 0.0D;
+    @SuppressWarnings("unchecked")
+    private void parseRerankResponse(Map<Integer, Double> scores, Map<String, Object> response) {
+        if (response == null) {
+            return;
         }
-        Matcher matcher = SCORE_PATTERN.matcher(text.trim());
-        if (!matcher.find()) {
-            return 0.0D;
+        Object outputObj = response.get("output");
+        if (!(outputObj instanceof Map<?, ?> outputMap)) {
+            return;
         }
-        try {
-            return Double.parseDouble(matcher.group(1));
-        } catch (Exception e) {
-            return 0.0D;
+        Object resultsObj = outputMap.get("results");
+        if (!(resultsObj instanceof List<?> results)) {
+            return;
         }
-    }
-
-    private double clamp01(double score) {
-        if (score < 0.0D) {
-            return 0.0D;
+        for (Object item : results) {
+            if (!(item instanceof Map<?, ?> resultMap)) {
+                continue;
+            }
+            Object indexObj = resultMap.get("index");
+            Object scoreObj = resultMap.get("relevance_score");
+            if (indexObj instanceof Number indexNum && scoreObj instanceof Number scoreNum) {
+                scores.put(indexNum.intValue(), scoreNum.doubleValue());
+            }
         }
-        if (score > 1.0D) {
-            return 1.0D;
-        }
-        return score;
     }
 
     private String dedupKey(Document d) {
