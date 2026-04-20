@@ -2,6 +2,7 @@ package com.zhj.learn.aisuperhost.ai.chatclient;
 
 import com.zhj.learn.aisuperhost.ai.advisor.MemoryLoadAdvisor;
 import com.zhj.learn.aisuperhost.ai.advisor.MemoryPersistAdvisor;
+import com.zhj.learn.aisuperhost.ai.tools.PlanDocxTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
@@ -19,11 +20,13 @@ public class MyChatClient {
                                      MemoryLoadAdvisor memoryLoadAdvisor,
                                      RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
                                      MemoryPersistAdvisor memoryPersistAdvisor,
-                                     @Qualifier("myMcpToolCallbackProvider") SyncMcpToolCallbackProvider myMcpToolCallbackProvider) {
+                                     @Qualifier("myMcpToolCallbackProvider") SyncMcpToolCallbackProvider myMcpToolCallbackProvider,
+                                     PlanDocxTools planDocxTools) {
 
         return ChatClient.builder(qwenChatModel)
                 // 顺序：记忆加载 -> RAG 检索增强 -> 记忆持久化
                 .defaultAdvisors(memoryLoadAdvisor, retrievalAugmentationAdvisor, memoryPersistAdvisor)
+                .defaultTools(planDocxTools)
                 .defaultToolCallbacks(myMcpToolCallbackProvider)
                 .build();
     }
