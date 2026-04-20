@@ -54,6 +54,16 @@
         </dependency>
 
         <!--
+          Spring AI MCP 模型 Starter，
+          负责自动装配 MCP 模型调用相关 Bean，作为该服务实现通用 Agent 的基础框架依赖。
+        -->
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
+        </dependency>
+
+        <!--
           测试依赖集合，支持 Spring Boot 上下文加载测试与接口测试，
           scope=test 确保不会打入运行时产物。
         -->
@@ -81,6 +91,7 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+
 
         <!--
           JDBC 基础能力，用于 RAG 检索阶段直接执行 PostgreSQL SQL（关键词召回、向量召回、融合查询等）。
