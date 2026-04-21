@@ -52,6 +52,7 @@ public class MyChatModelConfig {
 
     //创建千问对话模型
     @Bean
+    @Primary
     public ChatModel qwenChatModel() {
 
         OpenAiApi openAiApi = OpenAiApi.builder()

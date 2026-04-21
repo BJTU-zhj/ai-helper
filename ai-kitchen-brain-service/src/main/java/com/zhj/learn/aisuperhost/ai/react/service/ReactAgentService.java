@@ -44,6 +44,7 @@ public class ReactAgentService {
     private final ReactPlannerService reactPlannerService;
     private final ReactToolExecutor reactToolExecutor;
     private final ChatClient qwenChatClient;
+    private final ChatClient qwenPlannerChatClient;
     private final ObjectMapper objectMapper;
 
     /**
@@ -59,12 +60,14 @@ public class ReactAgentService {
     public ReactAgentService(ReactPlannerService reactPlannerService,
                              ReactToolExecutor reactToolExecutor,
                              @Qualifier("qwenChatClient") ChatClient qwenChatClient,
+                             @Qualifier("qwenPlannerChatClient") ChatClient qwenPlannerChatClient,
                              ObjectMapper objectMapper,
                              @Value("${app.react.max-steps:10}") int maxSteps,
                              @Value("${app.react.history-summary-max-length:1800}") int historySummaryMaxLength) {
         this.reactPlannerService = reactPlannerService;
         this.reactToolExecutor = reactToolExecutor;
         this.qwenChatClient = qwenChatClient;
+        this.qwenPlannerChatClient = qwenPlannerChatClient;
         this.objectMapper = objectMapper;
         this.maxSteps = Math.max(1, maxSteps);
         this.historySummaryMaxLength = Math.max(400, historySummaryMaxLength);
@@ -85,7 +88,7 @@ public class ReactAgentService {
         //存放处理步骤记忆
         List<ReactStep> steps = new ArrayList<>();
         //获取可用工具列表
-        List<String> availableTools = reactToolExecutor.listAvailableToolNames();
+        List<String> availableTools = reactToolExecutor.listAvailableToolDefinitions();
         log.info("ReAct started. memoryId={}, maxSteps={}, availableTools={}", memoryId, maxSteps, availableTools);
 
         for (int stepNo = 1; stepNo <= maxSteps; stepNo++) {
@@ -99,7 +102,7 @@ public class ReactAgentService {
                 //构建历史摘要
                 String stepHistorySummary = buildStepHistorySummary(steps);
                 //思考
-                ReactPlan plan = reactPlannerService.planNextStep(userInput, stepHistorySummary, availableTools);
+                ReactPlan plan = reactPlannerService.planNextStep(memoryId, userInput, stepHistorySummary, availableTools);
                 //获取下一步的动作类型和思考摘要
                 step.setActionType(plan.getActionType());
                 step.setThoughtSummary(plan.getThoughtSummary());
@@ -158,7 +161,7 @@ public class ReactAgentService {
                 + "请基于用户问题与已有步骤摘要给出一个尽可能有帮助的回答。\n"
                 + "步骤摘要：\n" + stepSummary + "\n";
 
-        return qwenChatClient.prompt()
+        return qwenPlannerChatClient.prompt()
                 .system(prompt)
                 .user(userInput)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, memoryId)

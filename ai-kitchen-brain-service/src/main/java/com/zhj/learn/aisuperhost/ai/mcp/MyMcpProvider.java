@@ -32,6 +32,16 @@ public class MyMcpProvider {
             uniqueClients.add(baiduWebSearchMcpSyncClient);
         }
         List<McpSyncClient> mcpSyncClients = uniqueClients.stream().toList();
+        for (McpSyncClient client : mcpSyncClients) {
+            try {
+                client.initialize();
+                log.info("MCP client initialized in provider. server={}, tools={}",
+                        client.getServerInfo(), client.listTools());
+            } catch (Exception e) {
+                log.warn("MCP client initialize failed in provider. server={}",
+                        client.getServerInfo(), e);
+            }
+        }
         List<String> serverNames = mcpSyncClients.stream()
                 .map(client -> client.getServerInfo() == null ? "unknown" : String.valueOf(client.getServerInfo().name()))
                 .toList();

@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,8 +33,8 @@ import java.util.stream.Collectors;
 public class ReactPlannerService {
 
     @Resource
-    @Qualifier("qwenChatClient")
-    private ChatClient qwenChatClient;
+    @Qualifier("qwenPlannerChatClient")
+    private ChatClient qwenPlannerChatClient;
 
     @Resource
     private ObjectMapper objectMapper;
@@ -57,12 +58,13 @@ public class ReactPlannerService {
     /**
      * 规划下一步动作。
      *
+     * @param memoryId 会话ID
      * @param userInput 当前轮用户输入
      * @param stepHistorySummary 历史步骤摘要（本轮临时状态，不是长期记忆）
      * @param availableTools 允许调用的工具名白名单
      * @return 结构化单步计划
      */
-    public ReactPlan planNextStep(String userInput, String stepHistorySummary, List<String> availableTools) {
+    public ReactPlan planNextStep(String memoryId, String userInput, String stepHistorySummary, List<String> availableTools) {
         if (!StringUtils.hasText(userInput)) {
             throw new IllegalArgumentException("userInput must not be blank");
         }
@@ -71,9 +73,19 @@ public class ReactPlannerService {
         }
         // 渲染 Prompt
         String renderedPrompt = renderPlannerPrompt(userInput, stepHistorySummary, availableTools);
-        String modelOutput = qwenChatClient.prompt()
+        String modelOutput = qwenPlannerChatClient.prompt()
                 .system(renderedPrompt)
                 .user("请严格按系统要求输出JSON对象。")
+                .advisors(advisor -> advisor
+                        // 会话ID：给 MemoryLoadAdvisor 用于加载当前会话的摘要与窗口历史。
+                        .param(ChatMemory.CONVERSATION_ID, memoryId)
+                        // ReAct 模式标记：让自定义顾问明确“这是 ReAct Planner 调用链路”。
+                        .param("react_mode", true)
+                        // 当前用户原始输入：作为持久化顾问与调试日志的可追溯字段。
+                        .param("react_user_input", userInput)
+                        // ReAct 步骤历史摘要：给 PlannerStepContextAdvisor 做消息级注入，
+                        // 让模型在本轮规划时感知之前的 thought/action/observation。
+                        .param("planner_step_history", stepHistorySummary))
                 .call()
                 .content();
 

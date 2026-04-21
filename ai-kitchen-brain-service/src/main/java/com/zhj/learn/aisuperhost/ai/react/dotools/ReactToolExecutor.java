@@ -2,10 +2,11 @@ package com.zhj.learn.aisuperhost.ai.react.dotools;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zhj.learn.aisuperhost.ai.tools.PlanDocxTools;
 import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.spec.McpSchema;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,17 +27,19 @@ import java.util.stream.Collectors;
  * 2. 返回标准化 observation 字符串，供下一步 Planner 继续推理。
  * 3. 仅做“执行”，不做规划；工具名和参数来自已校验的 ReactPlan。
  *
- * <p>当前支持：
- * - 本地 Tool：generatePlanDocx（PlanDocxTools）
- * - 远程 MCP Tool：遍历所有已发现 McpSyncClient 的工具并按名称匹配执行
+ * <p>实现策略：
+ * - 统一从 Spring 容器中的 {@link ToolCallbackProvider} 动态发现可用工具。
+ * - 本地 @Tool 与远程 MCP tool 都映射为 ToolCallback，执行路径保持一致。
  */
 @Service
 @Slf4j
 public class ReactToolExecutor {
 
-    private final ObjectProvider<McpSyncClient> mcpSyncClientProvider;
+    private final ObjectProvider<ToolCallbackProvider> toolCallbackProvider;
 
-    private final PlanDocxTools planDocxTools;
+    private final ObjectProvider<List<McpSyncClient>> mcpSyncClientListProvider;
+
+    private final ObjectProvider<McpSyncClient> mcpSyncClientProvider;
 
     private final ObjectMapper objectMapper;
 
@@ -46,12 +48,14 @@ public class ReactToolExecutor {
      */
     private final int observationMaxLength;
 
-    public ReactToolExecutor(ObjectProvider<McpSyncClient> mcpSyncClientProvider,
-                             PlanDocxTools planDocxTools,
+    public ReactToolExecutor(ObjectProvider<ToolCallbackProvider> toolCallbackProvider,
+                             ObjectProvider<List<McpSyncClient>> mcpSyncClientListProvider,
+                             ObjectProvider<McpSyncClient> mcpSyncClientProvider,
                              ObjectMapper objectMapper,
                              @Value("${app.react.observation-max-length:1500}") int observationMaxLength) {
+        this.toolCallbackProvider = toolCallbackProvider;
+        this.mcpSyncClientListProvider = mcpSyncClientListProvider;
         this.mcpSyncClientProvider = mcpSyncClientProvider;
-        this.planDocxTools = planDocxTools;
         this.objectMapper = objectMapper;
         this.observationMaxLength = Math.max(200, observationMaxLength);
     }
@@ -69,12 +73,35 @@ public class ReactToolExecutor {
         }
 
         Map<String, Object> safeArgs = toolArgs == null ? Map.of() : toolArgs;
+        List<ToolCallback> callbacks = listAllToolCallbacks();
+        String requested = toolName.trim();
+        String argsJson = toJsonSafely(safeArgs);
 
-        if ("generatePlanDocx".equalsIgnoreCase(toolName)) {
-            return executeLocalDocxTool(safeArgs);
+        for (ToolCallback callback : callbacks) {
+            if (callback == null || callback.getToolDefinition() == null) {
+                continue;
+            }
+            String callbackToolName = callback.getToolDefinition().name();
+            if (!StringUtils.hasText(callbackToolName)) {
+                continue;
+            }
+            if (!callbackToolName.trim().equalsIgnoreCase(requested)) {
+                continue;
+            }
+            try {
+                String callbackResult = callback.call(argsJson);
+                return trimObservation(StringUtils.hasText(callbackResult)
+                        ? callbackResult
+                        : "Tool callback executed with empty result");
+            } catch (Exception e) {
+                log.warn("Tool callback execution failed. requestedTool={}, callbackTool={}",
+                        requested, callbackToolName, e);
+            }
         }
 
-        return executeMcpTool(toolName, safeArgs);
+        String available = listAvailableToolNames().stream().collect(Collectors.joining(", "));
+        throw new IllegalArgumentException("Tool not found or execution failed: " + requested
+                + ". Available tools: " + available);
     }
 
     /**
@@ -82,134 +109,102 @@ public class ReactToolExecutor {
      */
     public List<String> listAvailableToolNames() {
         Set<String> names = new LinkedHashSet<>();
-        names.add("generatePlanDocx");
 
-        for (McpSyncClient client : mcpSyncClientProvider.orderedStream().toList()) {
-            try {
-                McpSchema.ListToolsResult result = client.listTools();
-                if (result == null || result.tools() == null) {
-                    continue;
-                }
-                result.tools().forEach(tool -> {
-                    if (tool != null && StringUtils.hasText(tool.name())) {
-                        names.add(tool.name());
-                    }
-                });
-            } catch (Exception e) {
-                log.warn("list MCP tools failed. server={}",
-                        client.getServerInfo() == null ? "unknown" : client.getServerInfo().name(), e);
+        for (ToolCallback callback : listAllToolCallbacks()) {
+            if (callback == null || callback.getToolDefinition() == null) {
+                continue;
+            }
+            String name = callback.getToolDefinition().name();
+            if (StringUtils.hasText(name)) {
+                names.add(name);
             }
         }
 
         return new ArrayList<>(names);
     }
 
-
     /**
-     * 执行本地工具：generatePlanDocx
+     * 返回当前 Agent 可见的工具定义，供 Planner 理解工具用途与参数结构。
      */
-    private String executeLocalDocxTool(Map<String, Object> toolArgs) {
-        String title = asString(toolArgs.get("title"));
-        String planContent = asString(toolArgs.get("planContent"));
-        String path = planDocxTools.generatePlanDocx(title, planContent);
-        return trimObservation("DOCX generated: " + path);
-    }
+    public List<String> listAvailableToolDefinitions() {
+        Set<String> definitions = new LinkedHashSet<>();
 
-
-    /**
-     * 执行远程 MCP 工具
-     */
-    private String executeMcpTool(String toolName, Map<String, Object> toolArgs) {
-        List<McpSyncClient> clients = mcpSyncClientProvider.orderedStream().toList();
-        if (clients.isEmpty()) {
-            throw new IllegalStateException("No MCP clients available");
-        }
-
-        for (McpSyncClient client : clients) {
-            try {
-                // 获取工具列表
-                McpSchema.ListToolsResult listToolsResult = client.listTools();
-                if (listToolsResult == null || listToolsResult.tools() == null) {
-                    continue;
-                }
-                // 匹配工具名
-                String matchedToolName = findMatchedToolName(listToolsResult.tools(), toolName);
-                if (!StringUtils.hasText(matchedToolName)) {
-                    continue;
-                }
-                // 调用工具
-                McpSchema.CallToolRequest request = new McpSchema.CallToolRequest(matchedToolName, toolArgs);
-                McpSchema.CallToolResult result = client.callTool(request);
-                return trimObservation(formatMcpCallResult(result));
-            } catch (Exception e) {
-                log.warn("MCP tool execution failed. requestedTool={}, server={}",
-                        toolName,
-                        client.getServerInfo() == null ? "unknown" : client.getServerInfo().name(),
-                        e);
-            }
-        }
-        //获取当前可以获取的工具列表
-        String available = listAvailableToolNames().stream().collect(Collectors.joining(", "));
-        throw new IllegalArgumentException("Tool not found or execution failed: " + toolName
-                + ". Available tools: " + available);
-    }
-
-    /**
-     * 尝试找到匹配的tool名字并返回。
-     *
-     * @param obj 工具结果对象
-     * @return JSON 字符串
-     */
-    private String findMatchedToolName(List<McpSchema.Tool> tools, String requestedToolName) {
-        String requested = requestedToolName.trim().toLowerCase(Locale.ROOT);
-        for (McpSchema.Tool tool : tools) {
-            if (tool == null || !StringUtils.hasText(tool.name())) {
+        for (ToolCallback callback : listAllToolCallbacks()) {
+            if (callback == null || callback.getToolDefinition() == null) {
                 continue;
             }
-            if (tool.name().trim().toLowerCase(Locale.ROOT).equals(requested)) {
-                return tool.name();
+            String name = callback.getToolDefinition().name();
+            if (!StringUtils.hasText(name)) {
+                continue;
             }
+
+            String description = callback.getToolDefinition().description();
+            String inputSchema = callback.getToolDefinition().inputSchema();
+            definitions.add("- name: " + name.trim()
+                    + "\n  description: " + (StringUtils.hasText(description) ? description.trim() : "无")
+                    + "\n  inputSchema: " + (StringUtils.hasText(inputSchema) ? inputSchema.trim() : "{}"));
         }
-        return null;
+
+        return new ArrayList<>(definitions);
     }
 
     /**
-     * 格式化 MCP 工具调用结果。
-     *
-     * @param result MCP 工具调用结果
-     * @return 格式化后的结果
+     * 递归收集所有 ToolCallbackProvider 中的工具。
      */
-    private String formatMcpCallResult(McpSchema.CallToolResult result) {
-        if (result == null) {
-            return "MCP result is null";
-        }
 
-        StringBuilder sb = new StringBuilder();
-        if (Boolean.TRUE.equals(result.isError())) {
-            sb.append("MCP tool returned error. ");
-        }
+    private List<ToolCallback> listAllToolCallbacks() {
+        Map<String, ToolCallback> callbacks = new java.util.LinkedHashMap<>();
 
-        if (result.structuredContent() != null) {
-            sb.append("structuredContent=").append(toJsonSafely(result.structuredContent())).append(' ');
-        }
-
-        if (result.content() != null && !result.content().isEmpty()) {
-            String contentText = result.content().stream()
-                    .map(content -> {
-                        if (content instanceof McpSchema.TextContent textContent) {
-                            return textContent.text();
-                        }
-                        return String.valueOf(content);
-                    })
-                    .filter(StringUtils::hasText)
-                    .collect(Collectors.joining("\n"));
-            if (StringUtils.hasText(contentText)) {
-                sb.append("content=").append(contentText);
+        for (ToolCallbackProvider provider : toolCallbackProvider.orderedStream().toList()) {
+            if (provider == null) {
+                continue;
             }
+            collectToolCallbacks(callbacks, provider, provider.getClass().getName());
         }
 
-        String formatted = sb.toString().trim();
-        return StringUtils.hasText(formatted) ? formatted : String.valueOf(result);
+        List<McpSyncClient> mcpClients = listAllMcpSyncClients();
+        if (!mcpClients.isEmpty()) {
+            collectToolCallbacks(callbacks, new SyncMcpToolCallbackProvider(mcpClients), "directMcpToolCallbackProvider");
+        }
+
+        return new ArrayList<>(callbacks.values());
+    }
+
+    /**
+     * 递归收集所有 MCP SyncClient 中的工具。
+     */
+    private List<McpSyncClient> listAllMcpSyncClients() {
+        Set<McpSyncClient> clients = new LinkedHashSet<>();
+        mcpSyncClientListProvider.orderedStream()
+                .filter(list -> list != null && !list.isEmpty())
+                .forEach(clients::addAll);
+        clients.addAll(mcpSyncClientProvider.orderedStream().toList());
+        return new ArrayList<>(clients);
+    }
+
+    /**
+     * 递归收集某个 ToolCallbackProvider 中的所有工具。
+     */
+    private void collectToolCallbacks(Map<String, ToolCallback> callbacks,
+                                      ToolCallbackProvider provider,
+                                      String providerName) {
+        try {
+            ToolCallback[] providerCallbacks = provider.getToolCallbacks();
+            if (providerCallbacks == null) {
+                return;
+            }
+            for (ToolCallback callback : providerCallbacks) {
+                if (callback == null || callback.getToolDefinition() == null) {
+                    continue;
+                }
+                String name = callback.getToolDefinition().name();
+                if (StringUtils.hasText(name)) {
+                    callbacks.putIfAbsent(name, callback);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("list tool callbacks failed. provider={}", providerName, e);
+        }
     }
 
     private String toJsonSafely(Object value) {
@@ -235,7 +230,4 @@ public class ReactToolExecutor {
         return text.substring(0, observationMaxLength) + "...(truncated)";
     }
 
-    private String asString(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }
