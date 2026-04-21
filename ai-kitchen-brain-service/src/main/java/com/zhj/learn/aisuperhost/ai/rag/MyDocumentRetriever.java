@@ -1,6 +1,6 @@
 package com.zhj.learn.aisuperhost.ai.rag;
 
-import com.zhj.learn.aisuperhost.DTO.RecallHitDTO;
+import com.zhj.learn.aisuperhost.dto.RecallHitDTO;
 import com.zhj.learn.aisuperhost.config.RagConfig;
 import com.zhj.learn.aisuperhost.service.RagService;
 import jakarta.annotation.Resource;
@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component

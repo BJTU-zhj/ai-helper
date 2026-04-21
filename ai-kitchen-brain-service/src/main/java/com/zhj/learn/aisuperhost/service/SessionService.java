@@ -1,18 +1,38 @@
 package com.zhj.learn.aisuperhost.service;
 
+import com.zhj.learn.aicommon.util.SnowUtil;
 import com.zhj.learn.aisuperhost.domain.Session;
+import com.zhj.learn.aisuperhost.domain.SessionExample;
 import com.zhj.learn.aisuperhost.mapper.SessionMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class SessionService {
 
     @Resource
     private SessionMapper sessionMapper;
+
+    @Resource
+    private ChatHistoryService chatHistoryService;
+
+    @Resource
+    private ChatSummaryService chatSummaryService;
+
+    @Resource
+    private RedisMemoryService redisMemoryService;
+
+    /**
+     * 后端生成 sessionId 创建会话。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Session createSession(String title) {
+        return createSession(SnowUtil.getSnowflakeIdStr(), title);
+    }
 
     /**
      * 前端提供 sessionId 创建会话。
@@ -43,6 +63,15 @@ public class SessionService {
     }
 
     /**
+     * 查询全部会话，按最近更新时间倒序返回。
+     */
+    public List<Session> listSessions() {
+        SessionExample example = new SessionExample();
+        example.setOrderByClause("updated_at desc, created_at desc");
+        return sessionMapper.selectByExample(example);
+    }
+
+    /**
      * 若会话不存在则创建；存在则返回已有会话。
      */
     @Transactional(rollbackFor = Exception.class)
@@ -67,6 +96,21 @@ public class SessionService {
         update.setTitle(normalizeTitle(newTitle));
         update.setUpdatedAt(new Date());
         return sessionMapper.updateByPrimaryKeySelective(update) > 0;
+    }
+
+    /**
+     * 删除会话及其数据库历史、摘要和 Redis 短期记忆。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteSession(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            throw new IllegalArgumentException("sessionId must not be blank");
+        }
+        String normalizedSessionId = sessionId.trim();
+        chatHistoryService.deleteBySessionId(normalizedSessionId);
+        chatSummaryService.deleteBySessionId(normalizedSessionId);
+        redisMemoryService.clearSessionMemory(normalizedSessionId);
+        return sessionMapper.deleteByPrimaryKey(normalizedSessionId) > 0;
     }
 
     /**

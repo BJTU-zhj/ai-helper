@@ -102,6 +102,32 @@ public class ChatHistoryService {
         return histories.get(0).getTurnNo();
     }
 
+    /**
+     * 查询某个会话的完整消息历史，按轮次和写入顺序正序返回。
+     */
+    public List<ChatHistory> listBySessionId(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return Collections.emptyList();
+        }
+        ChatHistoryExample example = new ChatHistoryExample();
+        example.createCriteria().andSessionIdEqualTo(sessionId.trim());
+        example.setOrderByClause("turn_no asc, id asc");
+        List<ChatHistory> histories = chatHistoryMapper.selectByExampleWithBLOBs(example);
+        return histories == null ? Collections.emptyList() : histories;
+    }
+
+    /**
+     * 删除某个会话的全部历史消息。
+     */
+    public int deleteBySessionId(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return 0;
+        }
+        ChatHistoryExample example = new ChatHistoryExample();
+        example.createCriteria().andSessionIdEqualTo(sessionId.trim());
+        return chatHistoryMapper.deleteByExample(example);
+    }
+
     // 获取下一轮轮次
     public long nextTurnNo(String sessionId) {
         return getMaxTurnNo(sessionId) + 1;

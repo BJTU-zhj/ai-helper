@@ -170,6 +170,7 @@ public class MemoryPersistService {
         String safeAssistantOutput = normalize(assistantOutput);
 
         sessionService.getOrCreate(sessionId, "新会话");
+        sessionService.touch(sessionId);
         ChatSummary summary = chatSummaryService.getBySessionId(sessionId);
         Objects.requireNonNull(summary, "chat summary must not be null");
 

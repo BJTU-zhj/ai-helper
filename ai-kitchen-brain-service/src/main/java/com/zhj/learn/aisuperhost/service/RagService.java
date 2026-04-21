@@ -1,6 +1,6 @@
 package com.zhj.learn.aisuperhost.service;
 
-import com.zhj.learn.aisuperhost.DTO.RecallHitDTO;
+import com.zhj.learn.aisuperhost.dto.RecallHitDTO;
 import com.zhj.learn.aisuperhost.domain.WindowTurn;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;

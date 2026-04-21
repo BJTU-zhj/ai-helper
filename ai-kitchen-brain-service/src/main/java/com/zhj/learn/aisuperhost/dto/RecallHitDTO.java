@@ -1,4 +1,4 @@
-package com.zhj.learn.aisuperhost.DTO;
+package com.zhj.learn.aisuperhost.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

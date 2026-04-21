@@ -68,4 +68,11 @@ public class ChatSummaryService {
 
         chatSummaryMapper.updateByPrimaryKeySelective(update);
     }
+
+    public int deleteBySessionId(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return 0;
+        }
+        return chatSummaryMapper.deleteByPrimaryKey(sessionId.trim());
+    }
 }
