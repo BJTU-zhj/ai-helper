@@ -42,6 +42,7 @@ public class ReactAgentService {
     private static final String STEP_STATUS_PLANNED = "PLANNED";
     private static final String STEP_STATUS_EXECUTED = "EXECUTED";
     private static final String STEP_STATUS_FAILED = "FAILED";
+    private static final int MAX_CONTINUOUS_FAILURES = 3;
 
     private final ReactPlannerService reactPlannerService;
     private final ReactToolExecutor reactToolExecutor;
@@ -102,6 +103,7 @@ public class ReactAgentService {
 
         //存放处理步骤记忆
         List<ReactStep> steps = new ArrayList<>();
+        int continuousFailures = 0;
         //获取可用工具列表
         List<String> availableTools = reactToolExecutor.listAvailableToolDefinitions();
         emit(eventConsumer, ReactStreamEvent.of("start", "ReAct started"));
@@ -149,18 +151,26 @@ public class ReactAgentService {
                 step.setStatus(STEP_STATUS_EXECUTED);
                 step.setFinishedAt(LocalDateTime.now());
                 steps.add(step);
+                continuousFailures = 0;
                 emit(eventConsumer, ReactStreamEvent.fromStep("tool_finished", step));
 
                 log.info("ReAct tool executed. memoryId={}, stepNo={}, toolName={}", memoryId, stepNo, toolName);
             } catch (Exception e) {
                 step.setStatus(STEP_STATUS_FAILED);
                 step.setErrorMessage(e.getMessage());
+                step.setObservation("工具或规划执行失败，下一步需要根据错误修正动作或参数：" + e.getMessage());
                 step.setFinishedAt(LocalDateTime.now());
                 steps.add(step);
+                continuousFailures++;
                 emit(eventConsumer, ReactStreamEvent.fromStep("step_failed", step));
-                //某一步失败，触发降级
-                log.error("ReAct step failed. memoryId={}, stepNo={}", memoryId, stepNo, e);
-                return degradeToDirectAnswer(memoryId, userInput, steps, "step-exception", eventConsumer);
+                log.warn("ReAct step failed, continue planning. memoryId={}, stepNo={}, continuousFailures={}",
+                        memoryId, stepNo, continuousFailures, e);
+
+                if (continuousFailures >= MAX_CONTINUOUS_FAILURES) {
+                    log.error("ReAct reached continuous failure limit. memoryId={}, continuousFailures={}",
+                            memoryId, continuousFailures);
+                    return degradeToDirectAnswer(memoryId, userInput, steps, "continuous-step-failures", eventConsumer);
+                }
             }
         }
 
@@ -224,10 +234,7 @@ public class ReactAgentService {
                 .map(this::toStepSummaryLine)
                 .collect(Collectors.joining("\n"));
 
-        if (summary.length() <= historySummaryMaxLength) {
-            return summary;
-        }
-        return summary.substring(0, historySummaryMaxLength) + "...(truncated)";
+        return summary;
     }
 
     /**

@@ -76,6 +76,8 @@ public class ReactToolExecutor {
         List<ToolCallback> callbacks = listAllToolCallbacks();
         String requested = toolName.trim();
         String argsJson = toJsonSafely(safeArgs);
+        Exception lastExecutionException = null;
+        String matchedToolName = null;
 
         for (ToolCallback callback : callbacks) {
             if (callback == null || callback.getToolDefinition() == null) {
@@ -88,19 +90,28 @@ public class ReactToolExecutor {
             if (!callbackToolName.trim().equalsIgnoreCase(requested)) {
                 continue;
             }
+            matchedToolName = callbackToolName.trim();
             try {
                 String callbackResult = callback.call(argsJson);
                 return trimObservation(StringUtils.hasText(callbackResult)
                         ? callbackResult
                         : "Tool callback executed with empty result");
             } catch (Exception e) {
+                lastExecutionException = e;
                 log.warn("Tool callback execution failed. requestedTool={}, callbackTool={}",
                         requested, callbackToolName, e);
             }
         }
 
+        if (lastExecutionException != null) {
+            throw new IllegalArgumentException("Tool execution failed: " + requested
+                    + ". Args: " + argsJson
+                    + ". Error: " + rootCauseMessage(lastExecutionException), lastExecutionException);
+        }
+
         String available = listAvailableToolNames().stream().collect(Collectors.joining(", "));
-        throw new IllegalArgumentException("Tool not found or execution failed: " + requested
+        throw new IllegalArgumentException("Tool not found: " + requested
+                + (matchedToolName == null ? "" : ". Matched tool: " + matchedToolName)
                 + ". Available tools: " + available);
     }
 
@@ -213,6 +224,18 @@ public class ReactToolExecutor {
         } catch (JsonProcessingException e) {
             return String.valueOf(value);
         }
+    }
+
+    private String rootCauseMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        String message = current.getMessage();
+        if (StringUtils.hasText(message)) {
+            return message.trim();
+        }
+        return current.getClass().getSimpleName();
     }
 
 

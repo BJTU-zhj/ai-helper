@@ -31,7 +31,7 @@ public class RedisMemoryService {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${memory.redis.window-size:3}")
+    @Value("${memory.redis.window-size:10}")
     private int windowSize;
 
     @Value("${memory.redis.summary-ttl-hours:72}")

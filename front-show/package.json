@@ -5,15 +5,26 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.9.0",
-    "vue": "^3.5.13"
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "naive-ui": "^2.40.3",
+    "pinia": "^2.3.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
-    "vite": "^6.2.2"
+    "@types/markdown-it": "^14.1.2",
+    "sass": "^1.89.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.2",
+    "vue-tsc": "^2.2.0"
   }
 }

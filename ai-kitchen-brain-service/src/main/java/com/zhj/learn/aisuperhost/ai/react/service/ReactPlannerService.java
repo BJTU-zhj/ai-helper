@@ -75,7 +75,7 @@ public class ReactPlannerService {
         String renderedPrompt = renderPlannerPrompt(userInput, stepHistorySummary, availableTools);
         String modelOutput = qwenPlannerChatClient.prompt()
                 .system(renderedPrompt)
-                .user("请严格按系统要求输出JSON对象。")
+                .user("当前用户问题：\n" + userInput.trim() + "\n\n请严格按系统要求输出JSON对象。")
                 .advisors(advisor -> advisor
                         // 会话ID：给 MemoryLoadAdvisor 用于加载当前会话的摘要与窗口历史。
                         .param(ChatMemory.CONVERSATION_ID, memoryId)
@@ -110,7 +110,6 @@ public class ReactPlannerService {
                 .map(String::trim)
                 .distinct()
                 .sorted()
-                .map(name -> "- " + name)
                 .collect(Collectors.joining("\n"));
 
         String historyText = StringUtils.hasText(stepHistorySummary)
