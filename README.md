@@ -1,74 +1,75 @@
-# ai-helper
+# AI Helper
 
-Microservices structure:
+AI Helper 是一个面向多场景智能助手的 Spring Boot 多模块项目，当前重点实现了基于 Spring AI 的 Kitchen Brain 智能体服务，并配套 Vue3 前端聊天工作台。项目支持多轮会话、ReAct 工具调用、地图/联网搜索/MCP 工具接入、RAG 检索增强、会话记忆持久化和文档生成。
 
-- `ai-utility-agent-service`: existing LangChain4j code assistant service, default port `8081`
-- `ai-kitchen-brain-service`: Spring AI based general agent host service skeleton, default port `8082`
-- `ai-gateway`: gateway service skeleton for forwarding traffic to internal AI services, default port `8080`
+## 1. 项目架构功能
 
-## Build all modules
-
-```bash
-./mvnw clean package
+```text
+ai-helper
+├── ai-common                  # 公共模块：统一响应、异常处理、日志切面、通用工具
+├── ai-gateway                 # 网关模块：统一路由转发
+├── ai-kitchen-brain-service   # 核心智能体服务：Spring AI、ReAct、RAG、记忆、工具调用
+├── ai-utility-agent-service   # 工具型智能体服务：LangChain4j 相关能力预留/扩展
+├── front-show                 # Vue3 前端聊天工作台
+├── sql                        # 数据库脚本
+├── generated-docx             # AI 生成的 docx 文档输出目录
+└── 技术方案设计               # 架构方案、RAG 方案、前端生成提示词等设计文档
 ```
 
-## Run services
+核心模块说明：
 
-```bash
-./mvnw -pl ai-utility-agent-service spring-boot:run
-./mvnw -pl ai-kitchen-brain-service spring-boot:run
-./mvnw -pl ai-gateway spring-boot:run
-```
+- `ai-gateway`：统一入口，默认端口 `8080`，将 `/super-host/**` 转发到 `ai-kitchen-brain-service`，将 `/code-assistant/**` 转发到 `ai-utility-agent-service`。
+- `ai-kitchen-brain-service`：核心服务，默认端口 `8082`，提供 `/brain/sessions` 会话接口和 `/brain/chat/stream/{sessionId}/{message}` 流式聊天接口。
+- `front-show`：前端工作台，基于 Vue3 + TypeScript + Vite，实现会话列表、历史消息、流式输出、ReAct 中间过程展示。
+- `ai-common`：公共基础能力，包括 `CommonResp`、全局异常处理、Controller 日志切面等。
 
-1、使用自定义advisor
-2、使用结构化输出
-3、持久化存储
-4、promprtTemplate的使用，可以返回prompt、message对象
+主要业务功能：
 
-rag
-文档读取和切割
-1、文档加载器，本地知识库 最终转化为document--------documentReader接口
+- 多会话管理：创建会话、查询会话、重命名会话、删除会话、查看历史消息。
+- 流式聊天：基于 `SseEmitter` 输出模型回答和 ReAct 过程事件。
+- ReAct 智能体：支持规划、工具调用、工具结果回灌、失败反馈重试、最终回答。
+- 地图工具：通过 MCP 调用高德地图工具，支持地理编码、周边搜索、路线规划等。
+- 联网搜索：通过 MCP/工具能力搜索实时网页信息。
+- 文档生成：将购物计划、菜谱、方案内容导出为 docx 文件。
+- 记忆持久化：会话历史写入 MySQL，短期窗口与摘要缓存写入 Redis。
+- RAG 检索增强：支持查询重写、混合检索、重排和检索增强生成。
 
-存储
-云知识库
-本地文件
-数据库
+## 2. 亮点功能技术栈
 
-检索
+后端技术栈：
+
+- Java 17
+- Spring Boot 3
+- Spring AI
+- Spring Cloud Gateway
+- MyBatis
+- MySQL
+- Redis
+- RocketMQ
+- PostgreSQL / PgVector
+- MCP Tool Calling
+- Apache POI / docx 生成
 
 
-增强检索生成的顾问主要了解两个
-主要是两个顾问
-一个是questionAnswerAdvisor,简单，就是拼接
-一个是RetrivalAugmentionAdvisor,自定义----支持查询转换器，检索器
 
-2、ETL，从读取到存储，
+亮点实现：
 
-Reader->Transformer->Wirter
+- 高性能会话记忆：通过 `MemoryLoadAdvisor` 和 `MemoryPersistAdvisor` 在模型调用前后自动装载、持久化上下文。Redis 优先承载短期窗口和滚动摘要，MySQL 作为历史消息与摘要游标的持久化回源，兼顾低延迟访问和长会话可恢复。
+- Redis 窗口与异步摘要：短期记忆使用 Redis List 存储最近 N 轮对话，追加后通过 `trim` 固定窗口大小，并设置 TTL 控制缓存生命周期。窗口即将淘汰的历史会触发 RocketMQ 摘要任务，由模型生成 rolling summary 后回写 MySQL 与 Redis，避免长对话上下文无限膨胀。
+- RAG 查询改写：`MyQueryTransformer` 基于历史上下文和独立提示词对用户问题进行重写，把多轮对话中的省略指代补全后再进入检索链路，提升知识库召回命中率。
+- RAG 混合召回：`MyDocumentRetriever` 使用 `CompletableFuture` 并行执行关键词召回和向量召回。关键词召回基于 PostgreSQL 全文检索与 jieba 分词配置，向量召回基于 Qwen Embedding 与 pgvector 相似度搜索，两条链路互补提升稳定性。
+- RAG 融合重排：`MyDocumentJoiner` 对多路候选结果做 RRF 融合与去重，再调用 DashScope/Qwen rerank 模型进行语义重排，最终按 `0.35 * RRF + 0.65 * rerank` 生成 TopK 上下文，降低单一路径召回偏差。
+- ReAct 模式智能体：Planner 严格输出 `ReactPlan` JSON，动作只允许 `ANSWER` 或 `TOOL_CALL`。Agent 主循环负责单步规划、工具调用、observation 回灌和最终回答，能够完成地图检索、联网搜索、文档生成等多工具组合任务。
 
-Reader: documentReader接口，返回document对象
 
-Transformer：大致可分为3类，一个是文本分割TextSplitter,一个是元数据增强转化器，可以用ai生成标签，摘要，还有一个是结构化没用的少
 
-Reader:可以存文件系统，也可以存向量数据库，VectorStore接口存向量数据库，可以将document对象存进数据库，且提供构建搜索请求的功能
+## 3. 本地效果图
 
-测试pgsql安装向量插件，可以用云
+会话记忆
 
-3、检索，spring ai将这部分分为：检索前，检索时和检索后三个环节，提供了大量的顾问支持
-在预检索阶段，系统接收用户的原始查询，通过查询转换和查询扩展等方法对其进行优化，输出增强的用户查询。
-rewriteQueryAdvisor,查询重写，调用大模型，给你规范的查询
-translationQueryAdvisor,查询翻译，调用大模型，给你翻译的查询
-compressionQueryAdvisor,查询压缩，调用大模型，将会话历史和当前提问，给你压缩的查询
-MultiQueryRewriteAdvisor,多查询重写，调用大模型，将原有查询变换成多个查询
+![memory.png](images/memory.png)
 
-在检索阶段，系统使用增强的查询从知识库中搜索相关文档，可能涉及多个检索源的合并，最终输出一组相关文档。
-documentRetriever,不同检索源的检索器，可以设置检索条件，元数据条件检索等
-concatentionDocumentJoiner,文档连接，将多个检索结果（可以不同数据源），连接成一个文档，去重
 
-在检索后阶段，系统对检索到的文档进行进一步处理，包括排序、选择最相关的子集以及压缩文档内容，输出经过优化的相关文档集。
+复杂任务处理
 
-4、增强生成阶段
-主要的几个顾问
-一个是questionAnswerAdvisor,简单，就是拼接
-一个是RetrivalAugmentionAdvisor,自定义----支持查询转换器，检索器（上边检索的检索前和检索后的检索器1）
-一个是contextualQueryAdvisor,空上下文处理，没找到相关知识，也让回答
+![task-deal.png](images/task-deal.png)
